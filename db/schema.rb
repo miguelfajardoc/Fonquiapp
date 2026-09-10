@@ -10,8 +10,27 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 0) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_10_214736) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "clients", force: :cascade do |t|
+    t.string "address"
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "phone"
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.bigint "zone_id", null: false
+    t.index ["zone_id"], name: "index_clients_on_zone_id"
+  end
+
+  create_table "zones", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_zones_on_name", unique: true
+  end
+
+  add_foreign_key "clients", "zones"
 end
