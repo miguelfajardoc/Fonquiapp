@@ -1,0 +1,36 @@
+plugins:
+  - rubocop-rails
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.4
+  SuggestExtensions: false
+  Exclude:
+    - "bin/**/*"
+    - "db/schema.rb"
+    - "db/*_schema.rb"
+    - "node_modules/**/*"
+    - "vendor/**/*"
+    - "tmp/**/*"
+    - "storage/**/*"
+
+# Match the style the Rails generators emit so `bin/rails g` output stays clean.
+Style/StringLiterals:
+  EnforcedStyle: double_quotes
+
+Style/StringLiteralsInInterpolation:
+  EnforcedStyle: double_quotes
+
+# Ruby 3.4 does not need the magic comment.
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# Documentation comments are not required for every class/module.
+Style/Documentation:
+  Enabled: false
+
+# Config and spec blocks are legitimately long.
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "config/**/*"
