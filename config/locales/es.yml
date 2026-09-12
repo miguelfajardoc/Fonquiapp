@@ -1,4 +1,12 @@
 es:
+  nav:
+    brand: "Fonquilac"
+    zones: "Zonas"
+    clients: "Clientes"
+    products: "Productos"
+    products_default: "Default"
+    products_pending: "Pendientes"
+    products_daily_order: "Orden Diaria"
   shared:
     confirm_dialog:
       confirm_question_prefix: "¿Estás seguro que deseas eliminar"

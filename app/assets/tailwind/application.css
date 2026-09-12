@@ -16,6 +16,9 @@
   --border: #E6E0D5;
   --accent: #B8902E;
   --accent-contrast: #1B1A18;
+  --sidebar-bg: #16140F;
+  --sidebar-text: #DAD5C8;
+  --sidebar-text-muted: #8B8577;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,6 +31,9 @@
     --border: #322D26;
     --accent: #C7A233;
     --accent-contrast: #14120E;
+    --sidebar-bg: #0A0908;
+    --sidebar-text: #E8E2D2;
+    --sidebar-text-muted: #8A8272;
   }
 }
 
@@ -41,4 +47,7 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-contrast: var(--accent-contrast);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-text-muted: var(--sidebar-text-muted);
 }

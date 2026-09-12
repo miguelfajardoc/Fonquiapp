@@ -1,0 +1,24 @@
+<aside class="flex w-60 flex-shrink-0 flex-col gap-6 bg-sidebar-bg px-3 py-6 text-sidebar-text">
+  <div class="px-3 text-sm font-semibold tracking-wide">
+    <%= t("nav.brand") %>
+  </div>
+
+  <nav class="flex flex-col gap-1">
+    <%= link_to t("nav.zones"), zones_path,
+          class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "zones" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
+    <%= link_to t("nav.clients"), clients_path,
+          class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "clients" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
+
+    <div class="group">
+      <div class="cursor-default rounded px-3 py-2 text-sm font-medium text-sidebar-text">
+        <%= t("nav.products") %>
+      </div>
+      <div class="hidden flex-col gap-1 pl-3 group-hover:flex">
+        <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products") %></span>
+        <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_default") %></span>
+        <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_pending") %></span>
+        <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_daily_order") %></span>
+      </div>
+    </div>
+  </nav>
+</aside>
