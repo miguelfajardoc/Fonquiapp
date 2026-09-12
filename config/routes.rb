@@ -11,6 +11,7 @@ Rails.application.routes.draw do
 
   resources :zones, except: [:show]
   resources :clients
+  resources :products, except: [:show]
 
   # Defines the root path route ("/")
   # root "posts#index"

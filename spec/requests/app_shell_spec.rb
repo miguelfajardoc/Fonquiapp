@@ -42,19 +42,20 @@ RSpec.describe "App shell", type: :request do
       expect(zonas_link["class"]).not_to include("text-accent")
     end
 
-    it "lists the Productos submenu entries in order with no links or buttons" do
+    it "lists the Productos submenu entries in order, with only Productos linking to the product index" do
       get zones_path
       doc = response.parsed_body
 
-      expect(doc.css("a").map { |a| a.text.strip }).not_to include("Productos")
-      expect(doc.css("button").map { |b| b.text.strip }).not_to include("Productos")
+      submenu_items = doc.css("div.hidden > a, div.hidden > span")
+      expect(submenu_items.map { |el| el.text.strip }).to eq(
+        ["Productos", "Default", "Pendientes", "Orden Diaria"]
+      )
 
-      submenu_names = ["Productos", "Default", "Pendientes", "Orden Diaria"]
-      submenu_labels = doc.css("span").map { |span| span.text.strip }.select do |text|
-        submenu_names.include?(text)
-      end
+      productos_entry = submenu_items.first
+      expect(productos_entry.name).to eq("a")
+      expect(productos_entry["href"]).to eq(products_path)
 
-      expect(submenu_labels).to eq(submenu_names)
+      submenu_items[1..].each { |el| expect(el.name).to eq("span") }
     end
   end
 end

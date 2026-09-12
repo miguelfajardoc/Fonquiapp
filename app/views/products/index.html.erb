@@ -1,0 +1,44 @@
+<% content_for :title, t(".title") %>
+
+<div class="flex w-full flex-col gap-6" data-controller="modal">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
+    <%= link_to t(".new_button"), new_product_path,
+          class: "flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast" %>
+  </div>
+
+  <div class="overflow-x-auto rounded border border-border bg-surface">
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-border text-text-muted">
+          <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
+          <th class="px-4 py-3 font-medium"><%= t(".table_price") %></th>
+          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @products.each do |product| %>
+          <tr class="border-b border-border last:border-0">
+            <td class="px-4 py-3 text-text"><%= product.name %></td>
+            <td class="px-4 py-3 text-text"><%= number_to_currency(product.price) %></td>
+            <td class="px-4 py-3">
+              <div class="flex gap-3">
+                <%= link_to t(".edit"), edit_product_path(product),
+                      class: "rounded border border-border px-3 py-1.5 text-text" %>
+                <button type="button"
+                        class="rounded border border-border px-3 py-1.5 text-text"
+                        data-action="modal#open"
+                        data-modal-name-param="<%= product.name %>"
+                        data-modal-url-param="<%= product_path(product) %>">
+                  <%= t(".delete") %>
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "shared/confirm_dialog" %>
+</div>

@@ -14,7 +14,8 @@
         <%= t("nav.products") %>
       </div>
       <div class="hidden flex-col gap-1 pl-3 group-hover:flex">
-        <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products") %></span>
+        <%= link_to t("nav.products"), products_path,
+              class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
         <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_default") %></span>
         <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_pending") %></span>
         <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_daily_order") %></span>

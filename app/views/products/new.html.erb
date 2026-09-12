@@ -1,0 +1,6 @@
+<% content_for :title, t(".title") %>
+
+<div class="flex flex-col gap-6">
+  <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
+  <%= render "form", product: @product %>
+</div>
