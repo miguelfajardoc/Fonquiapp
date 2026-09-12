@@ -1,0 +1,6 @@
+<% flash.each do |type, message| %>
+  <% next if message.blank? %>
+  <div class="rounded border px-4 py-3 text-sm <%= type.to_s == 'alert' ? 'border-accent text-text bg-surface-2 font-semibold' : 'border-border text-text bg-surface-2' %>">
+    <%= message %>
+  </div>
+<% end %>

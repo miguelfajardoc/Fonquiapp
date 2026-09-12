@@ -2,6 +2,11 @@ source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.1.3", ">= 8.1.3.1"
+# Pin below 3.0: json 3.x's parse(source, **kwargs) is incompatible with how
+# activesupport 8.1.3.1 still calls JSON.parse(json, options) positionally,
+# which breaks ActiveSupport::JSON.decode (session/flash cookie decryption
+# included) with "wrong number of arguments (given 2, expected 1)".
+gem "json", "< 3"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use PostgreSQL as the database for Active Record

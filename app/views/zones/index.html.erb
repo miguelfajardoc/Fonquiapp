@@ -1,0 +1,62 @@
+<% content_for :title, t(".title") %>
+
+<div class="flex w-full flex-col gap-6" data-controller="modal">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
+    <%= link_to t(".new_button"), new_zone_path,
+          class: "flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast" %>
+  </div>
+
+  <div class="overflow-x-auto rounded border border-border bg-surface">
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-border text-text-muted">
+          <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
+          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @zones.each do |zone| %>
+          <tr class="border-b border-border last:border-0">
+            <td class="px-4 py-3 text-text"><%= zone.name %></td>
+            <td class="px-4 py-3">
+              <div class="flex gap-3">
+                <%= link_to t(".edit"), edit_zone_path(zone),
+                      class: "rounded border border-border px-3 py-1.5 text-text" %>
+                <button type="button"
+                        class="rounded border border-border px-3 py-1.5 text-text"
+                        data-action="modal#open"
+                        data-modal-name-param="<%= zone.name %>"
+                        data-modal-url-param="<%= zone_path(zone) %>">
+                  <%= t(".delete") %>
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <dialog data-modal-target="dialog"
+          data-action="cancel->modal#close"
+          class="w-full max-w-sm rounded border border-border bg-surface p-6 text-text backdrop:bg-text/40">
+    <p class="text-base">
+      <%= t(".modal.confirm_question_prefix") %>
+      <strong data-modal-target="name"></strong><%= t(".modal.confirm_question_suffix") %>
+    </p>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button type="button" data-action="modal#close"
+              class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text">
+        <%= t(".modal.cancel") %>
+      </button>
+      <%= form_with url: "#", method: :delete, data: { modal_target: "form" } do %>
+        <button type="submit"
+                class="flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast">
+          <%= t(".modal.confirm") %>
+        </button>
+      <% end %>
+    </div>
+  </dialog>
+</div>

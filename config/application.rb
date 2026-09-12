@@ -16,6 +16,13 @@ module Fonquiapp
     # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
+    # The app's UI is in Spanish; fall back to Rails' bundled English
+    # translations for any message (e.g. built-in ActiveRecord validation
+    # errors) that doesn't have a Spanish entry in config/locales.
+    config.i18n.default_locale = :es
+    config.i18n.available_locales = %i[es en]
+    config.i18n.fallbacks = [:en]
+
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files

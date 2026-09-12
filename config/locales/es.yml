@@ -1,0 +1,30 @@
+es:
+  zones:
+    index:
+      title: "Zonas"
+      new_button: "Crear zona"
+      table_name: "Nombre"
+      table_actions: "Acciones"
+      edit: "Editar"
+      delete: "Eliminar"
+      modal:
+        confirm_question_prefix: "¿Estás seguro que deseas eliminar la zona"
+        confirm_question_suffix: "?"
+        cancel: "Cancelar"
+        confirm: "Eliminar"
+    new:
+      title: "Nueva zona"
+    edit:
+      title: "Editar zona"
+    form:
+      name_label: "Nombre"
+      cancel: "Cancelar"
+      submit_create: "Crear"
+      submit_update: "Actualizar"
+      errors_summary:
+        one: "%{count} error impidió guardar esta zona:"
+        other: "%{count} errores impidieron guardar esta zona:"
+    flash:
+      created: "Zona creada."
+      updated: "Zona actualizada."
+      deleted: "Zona eliminada."

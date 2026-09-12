@@ -1,1 +1,44 @@
 @import "tailwindcss";
+
+/*
+ * Centralized color tokens for the app.
+ * Light values (from the "Opción A" reference palette) are the default;
+ * dark values ("Opción B") apply automatically under the OS/browser's
+ * `prefers-color-scheme: dark`. To change the palette, edit only the hex
+ * values below — nothing else in the app should hard-code a color.
+ */
+:root {
+  --bg: #FAF8F4;
+  --surface: #FFFFFF;
+  --surface-2: #FCFBF8;
+  --text: #1B1A18;
+  --text-muted: #797264;
+  --border: #E6E0D5;
+  --accent: #B8902E;
+  --accent-contrast: #1B1A18;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121110;
+    --surface: #1B1917;
+    --surface-2: #221F1B;
+    --text: #F3F0E9;
+    --text-muted: #A79E8E;
+    --border: #322D26;
+    --accent: #C7A233;
+    --accent-contrast: #14120E;
+  }
+}
+
+/* Expose the tokens above as Tailwind utilities: bg-bg, text-text, border-border, etc. */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+}

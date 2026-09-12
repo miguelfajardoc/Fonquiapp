@@ -24,8 +24,9 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
+  <body class="bg-bg text-text">
+    <main class="container mx-auto mt-28 px-5 flex flex-col gap-4">
+      <%= render "layouts/flash" %>
       <%= yield %>
     </main>
   </body>
