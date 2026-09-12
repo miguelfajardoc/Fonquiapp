@@ -1,0 +1,21 @@
+<dialog data-modal-target="dialog"
+        data-action="cancel->modal#close"
+        class="m-auto w-full max-w-sm rounded border border-border bg-surface p-6 text-text backdrop:bg-text/40">
+  <p class="text-base">
+    <%= t("shared.confirm_dialog.confirm_question_prefix") %>
+    <strong data-modal-target="name"></strong><%= t("shared.confirm_dialog.confirm_question_suffix") %>
+  </p>
+
+  <div class="mt-6 flex justify-end gap-3">
+    <button type="button" data-action="modal#close"
+            class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text">
+      <%= t("shared.confirm_dialog.cancel") %>
+    </button>
+    <%= form_with url: "#", method: :delete, data: { modal_target: "form" } do %>
+      <button type="submit"
+              class="flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast">
+        <%= t("shared.confirm_dialog.confirm") %>
+      </button>
+    <% end %>
+  </div>
+</dialog>

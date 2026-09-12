@@ -104,6 +104,37 @@ RSpec.describe "Zones", type: :request do
     end
   end
 
+  describe "POST /zones from the client form's inline zone-creation dialog" do
+    let(:frame_headers) { { "Turbo-Frame" => ZonesController::NEW_ZONE_MODAL_FRAME } }
+
+    it "creates the zone and appends it, selected, to the client zone select via turbo_stream" do
+      expect do
+        post zones_path, params: { zone: { name: "Norte" } }, headers: frame_headers
+      end.to change(Zone, :count).by(1)
+
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response.body).to include('target="client_zone_select"')
+      expect(response.body).to include("Norte")
+      expect(response.body).to include("selected")
+    end
+
+    it "keeps the dialog's frame content and reports the error on a blank name" do
+      expect do
+        post zones_path, params: { zone: { name: "" } }, headers: frame_headers
+      end.not_to change(Zone, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      expect(response.body).to include(ZonesController::NEW_ZONE_MODAL_FRAME)
+    end
+
+    it "does not redirect (stays a turbo_stream response, not a page navigation)" do
+      post zones_path, params: { zone: { name: "Norte" } }, headers: frame_headers
+
+      expect(response).not_to be_redirect
+    end
+  end
+
   describe "DELETE /zones/:id" do
     it "deletes a zone with no associated records" do
       zone = create(:zone)

@@ -1,0 +1,70 @@
+<div data-controller="new-zone-dialog">
+  <%= form_with model: client, class: "flex flex-col gap-4 max-w-sm" do |form| %>
+    <% if client.errors.any? %>
+      <div class="rounded border border-accent bg-surface-2 px-4 py-3 text-sm text-text">
+        <p class="font-semibold"><%= t(".errors_summary", count: client.errors.count) %></p>
+        <ul class="list-disc pl-5">
+          <% client.errors.each do |error| %>
+            <li><%= error.full_message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="flex flex-col gap-1">
+      <%= form.label :name, t(".name_label"), class: "text-sm font-medium text-text" %>
+      <%= form.text_field :name,
+            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                     focus:outline-none focus:ring-2 focus:ring-accent" %>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <%= form.label :address, t(".address_label"), class: "text-sm font-medium text-text" %>
+      <%= form.text_field :address,
+            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                     focus:outline-none focus:ring-2 focus:ring-accent" %>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <%= form.label :url, t(".url_label"), class: "text-sm font-medium text-text" %>
+      <%= form.text_field :url,
+            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                     focus:outline-none focus:ring-2 focus:ring-accent" %>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <%= form.label :phone, t(".phone_label"), class: "text-sm font-medium text-text" %>
+      <%= form.text_field :phone,
+            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                     focus:outline-none focus:ring-2 focus:ring-accent" %>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <%= form.label :zone_id, t(".zone_label"), class: "text-sm font-medium text-text" %>
+      <%= form.select :zone_id,
+            options_from_collection_for_select(Zone.order(:name), :id, :name, client.zone_id) +
+              content_tag(:option, t(".new_zone_option"), value: "new"),
+            {},
+            { id: "client_zone_select",
+              data: { action: "change->new-zone-dialog#openOnNewOption",
+                      "new-zone-dialog-target": "select" },
+              class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                       focus:outline-none focus:ring-2 focus:ring-accent" } %>
+    </div>
+
+    <div class="flex justify-end gap-3">
+      <%= link_to t(".cancel"), clients_path,
+            class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
+      <%= form.submit(client.persisted? ? t(".submit_update") : t(".submit_create"),
+            class: "h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer") %>
+    </div>
+  <% end %>
+
+  <dialog data-new-zone-dialog-target="dialog"
+          data-action="cancel->new-zone-dialog#close turbo:submit-end->new-zone-dialog#closeOnSuccess"
+          class="m-auto w-full max-w-sm rounded border border-border bg-surface p-6 text-text backdrop:bg-text/40">
+    <%= turbo_frame_tag ZonesController::NEW_ZONE_MODAL_FRAME do %>
+      <%= render "zones/form", zone: Zone.new, in_dialog: true %>
+    <% end %>
+  </dialog>
+</div>

@@ -1,0 +1,42 @@
+<% content_for :title, @client.name %>
+
+<div class="flex w-full flex-col gap-6" data-controller="modal">
+  <h1 class="text-2xl font-semibold text-text"><%= @client.name %></h1>
+
+  <div class="flex flex-col gap-4 rounded border border-border bg-surface p-6 max-w-sm">
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-text-muted"><%= t(".name_label") %></span>
+      <span class="text-text"><%= @client.name %></span>
+    </div>
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-text-muted"><%= t(".address_label") %></span>
+      <span class="text-text"><%= @client.address %></span>
+    </div>
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-text-muted"><%= t(".url_label") %></span>
+      <span class="text-text"><%= @client.url %></span>
+    </div>
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-text-muted"><%= t(".phone_label") %></span>
+      <span class="text-text"><%= @client.phone %></span>
+    </div>
+    <div class="flex flex-col gap-1">
+      <span class="text-sm font-medium text-text-muted"><%= t(".zone_label") %></span>
+      <span class="text-text"><%= @client.zone.name %></span>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <%= link_to t(".edit"), edit_client_path(@client),
+          class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
+    <button type="button"
+            class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text"
+            data-action="modal#open"
+            data-modal-name-param="<%= @client.name %>"
+            data-modal-url-param="<%= client_path(@client) %>">
+      <%= t(".delete") %>
+    </button>
+  </div>
+
+  <%= render "shared/confirm_dialog" %>
+</div>

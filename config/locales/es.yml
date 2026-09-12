@@ -1,4 +1,10 @@
 es:
+  shared:
+    confirm_dialog:
+      confirm_question_prefix: "¿Estás seguro que deseas eliminar"
+      confirm_question_suffix: "?"
+      cancel: "Cancelar"
+      confirm: "Eliminar"
   zones:
     index:
       title: "Zonas"
@@ -7,11 +13,6 @@ es:
       table_actions: "Acciones"
       edit: "Editar"
       delete: "Eliminar"
-      modal:
-        confirm_question_prefix: "¿Estás seguro que deseas eliminar la zona"
-        confirm_question_suffix: "?"
-        cancel: "Cancelar"
-        confirm: "Eliminar"
     new:
       title: "Nueva zona"
     edit:
@@ -28,3 +29,43 @@ es:
       created: "Zona creada."
       updated: "Zona actualizada."
       deleted: "Zona eliminada."
+  clients:
+    index:
+      title: "Clientes"
+      new_button: "Crear cliente"
+      table_name: "Nombre"
+      table_address: "Dirección"
+      table_url: "Ubicación"
+      table_phone: "Teléfono"
+      table_zone: "Zona"
+      table_actions: "Acciones"
+      delete: "Eliminar"
+    show:
+      name_label: "Nombre"
+      address_label: "Dirección"
+      url_label: "Ubicación"
+      phone_label: "Teléfono"
+      zone_label: "Zona"
+      edit: "Editar"
+      delete: "Eliminar"
+    new:
+      title: "Nuevo cliente"
+    edit:
+      title: "Editar cliente"
+    form:
+      name_label: "Nombre"
+      address_label: "Dirección"
+      url_label: "Ubicación"
+      phone_label: "Teléfono"
+      zone_label: "Zona"
+      new_zone_option: "+ Crear zona"
+      cancel: "Cancelar"
+      submit_create: "Crear"
+      submit_update: "Actualizar"
+      errors_summary:
+        one: "%{count} error impidió guardar este cliente:"
+        other: "%{count} errores impidieron guardar este cliente:"
+    flash:
+      created: "Cliente creado."
+      updated: "Cliente actualizado."
+      deleted: "Cliente eliminado."

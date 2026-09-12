@@ -18,8 +18,15 @@
   </div>
 
   <div class="flex justify-end gap-3">
-    <%= link_to t(".cancel"), zones_path,
-          class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
+    <% if local_assigns[:in_dialog] %>
+      <button type="button" data-action="click->new-zone-dialog#close"
+              class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text">
+        <%= t(".cancel") %>
+      </button>
+    <% else %>
+      <%= link_to t(".cancel"), zones_path,
+            class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
+    <% end %>
     <%= form.submit(zone.persisted? ? t(".submit_update") : t(".submit_create"),
           class: "h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer") %>
   </div>
