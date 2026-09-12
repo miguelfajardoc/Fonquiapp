@@ -6,4 +6,8 @@ class Client < ApplicationRecord
   has_many :daily_product_orders, dependent: :restrict_with_error
 
   validates :name, presence: true
+
+  def to_combobox_display
+    name
+  end
 end

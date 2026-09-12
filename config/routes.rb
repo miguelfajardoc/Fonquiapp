@@ -12,6 +12,9 @@ Rails.application.routes.draw do
   resources :zones, except: [:show]
   resources :clients
   resources :products, except: [:show]
+  resources :default_product_quantities, except: [:show] do
+    collection { get :client_options }
+  end
 
   # Defines the root path route ("/")
   # root "posts#index"

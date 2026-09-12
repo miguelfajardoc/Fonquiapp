@@ -1,0 +1,46 @@
+<% content_for :title, t(".title") %>
+
+<div class="flex w-full flex-col gap-6" data-controller="modal">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
+    <%= link_to t(".new_button"), new_default_product_quantity_path,
+          class: "flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast" %>
+  </div>
+
+  <div class="overflow-x-auto rounded border border-border bg-surface">
+    <table class="w-full text-left text-sm">
+      <thead>
+        <tr class="border-b border-border text-text-muted">
+          <th class="px-4 py-3 font-medium"><%= t(".table_client") %></th>
+          <th class="px-4 py-3 font-medium"><%= t(".table_product") %></th>
+          <th class="px-4 py-3 font-medium"><%= t(".table_quantity") %></th>
+          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @default_product_quantities.each do |default_product_quantity| %>
+          <tr class="border-b border-border last:border-0">
+            <td class="px-4 py-3 text-text"><%= default_product_quantity.client.name %></td>
+            <td class="px-4 py-3 text-text"><%= default_product_quantity.product.name %></td>
+            <td class="px-4 py-3 text-text"><%= default_product_quantity.quantity %></td>
+            <td class="px-4 py-3">
+              <div class="flex gap-3">
+                <%= link_to t(".edit"), edit_default_product_quantity_path(default_product_quantity),
+                      class: "rounded border border-border px-3 py-1.5 text-text" %>
+                <button type="button"
+                        class="rounded border border-border px-3 py-1.5 text-text"
+                        data-action="modal#open"
+                        data-modal-name-param="<%= "#{default_product_quantity.client.name} / #{default_product_quantity.product.name}" %>"
+                        data-modal-url-param="<%= default_product_quantity_path(default_product_quantity) %>">
+                  <%= t(".delete") %>
+                </button>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <%= render "shared/confirm_dialog" %>
+</div>

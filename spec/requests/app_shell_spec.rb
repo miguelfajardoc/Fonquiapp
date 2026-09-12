@@ -42,7 +42,7 @@ RSpec.describe "App shell", type: :request do
       expect(zonas_link["class"]).not_to include("text-accent")
     end
 
-    it "lists the Productos submenu entries in order, with only Productos linking to the product index" do
+    it "lists the Productos submenu entries in order, with Productos and Default linking to their indexes" do
       get zones_path
       doc = response.parsed_body
 
@@ -51,11 +51,15 @@ RSpec.describe "App shell", type: :request do
         ["Productos", "Default", "Pendientes", "Orden Diaria"]
       )
 
-      productos_entry = submenu_items.first
+      productos_entry, default_entry, *rest = submenu_items
+
       expect(productos_entry.name).to eq("a")
       expect(productos_entry["href"]).to eq(products_path)
 
-      submenu_items[1..].each { |el| expect(el.name).to eq("span") }
+      expect(default_entry.name).to eq("a")
+      expect(default_entry["href"]).to eq(default_product_quantities_path)
+
+      rest.each { |el| expect(el.name).to eq("span") }
     end
   end
 end

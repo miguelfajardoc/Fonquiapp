@@ -51,3 +51,14 @@
   --color-sidebar-text: var(--sidebar-text);
   --color-sidebar-text-muted: var(--sidebar-text-muted);
 }
+
+/*
+ * hotwire_combobox ships its own fixed width (10rem) via this custom
+ * property, applied to its fieldset's inner wrapper regardless of the
+ * form's own width — Tailwind width utilities on the surrounding markup
+ * have no effect on it. Override it here so combobox fields (e.g. the
+ * client picker) are wide enough to show a full name instead of truncating.
+ */
+.hw-combobox {
+  --hw-combobox-width: 28rem;
+}

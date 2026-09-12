@@ -110,3 +110,34 @@ es:
       created: "Producto creado."
       updated: "Producto actualizado."
       deleted: "Producto eliminado."
+  default_product_quantities:
+    index:
+      title: "Default"
+      new_button: "Crear default"
+      table_client: "Cliente"
+      table_product: "Producto"
+      table_quantity: "Cantidad"
+      table_actions: "Acciones"
+      edit: "Editar"
+      delete: "Eliminar"
+    new:
+      title: "Nuevo default"
+    edit:
+      title: "Editar default"
+    form:
+      zone_label: "Zona"
+      zone_placeholder: "Selecciona una zona"
+      client_label: "Cliente"
+      product_label: "Producto"
+      product_placeholder: "Selecciona un producto"
+      quantity_label: "Cantidad"
+      cancel: "Cancelar"
+      submit_create: "Crear"
+      submit_update: "Actualizar"
+      errors_summary:
+        one: "%{count} error impidió guardar este default:"
+        other: "%{count} errores impidieron guardar este default:"
+    flash:
+      created: "Default creado."
+      updated: "Default actualizado."
+      deleted: "Default eliminado."
