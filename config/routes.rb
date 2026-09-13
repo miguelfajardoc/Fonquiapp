@@ -19,6 +19,12 @@ Rails.application.routes.draw do
     member { patch :toggle_state }
     collection { get :client_options }
   end
+  resources :daily_product_orders, only: [:index] do
+    collection do
+      post :generate
+      get :consolidated
+    end
+  end
 
   # Defines the root path route ("/")
   # root "posts#index"

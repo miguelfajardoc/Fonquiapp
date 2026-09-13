@@ -44,11 +44,10 @@ entry that is not itself a link.
 
 The system SHALL reveal a submenu when the pointer hovers over the
 "Productos" entry, listing four entries in order: "Productos", "Default",
-"Pendientes", and "Orden Diaria". The "Productos", "Default", and
-"Pendientes" submenu entries SHALL each be a link — "Productos" to the
-product index, "Default" to the default product quantity index, and
-"Pendientes" to the pending product index. The remaining submenu entry
-SHALL NOT be a link.
+"Pendientes", and "Orden Diaria". Every submenu entry SHALL be a link —
+"Productos" to the product index, "Default" to the default product
+quantity index, "Pendientes" to the pending product index, and "Orden
+Diaria" to the daily product order index.
 
 #### Scenario: Hovering Productos reveals its submenu
 
@@ -71,10 +70,16 @@ SHALL NOT be a link.
 - **WHEN** the "Pendientes" submenu entry is activated
 - **THEN** the pending product index is displayed
 
+#### Scenario: Orden Diaria submenu entry navigates to the daily product order index
+
+- **WHEN** the "Orden Diaria" submenu entry is activated
+- **THEN** the daily product order index is displayed
+
 #### Scenario: Submenu entries are inert
 
 - **WHEN** the Productos submenu is displayed
-- **THEN** "Orden Diaria" does not navigate to a page when activated
+- **THEN** none of its entries are inert — each one navigates to a page
+  when activated
 
 ### Requirement: Active section highlighting
 

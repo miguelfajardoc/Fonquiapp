@@ -25,6 +25,8 @@ gem "tailwindcss-rails"
 gem "jbuilder"
 # Searchable combobox form control [https://github.com/josefarias/hotwire_combobox]
 gem "hotwire_combobox"
+# Generate XLSX spreadsheets [https://github.com/caxlsx/caxlsx]
+gem "caxlsx"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

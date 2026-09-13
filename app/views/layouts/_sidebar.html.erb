@@ -20,7 +20,8 @@
               class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
         <%= link_to t("nav.products_pending"), pending_products_path,
               class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
-        <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_daily_order") %></span>
+        <%= link_to t("nav.products_daily_order"), daily_product_orders_path,
+              class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
       </div>
     </div>
   </nav>

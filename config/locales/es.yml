@@ -188,3 +188,17 @@ es:
       canceled: "Cancelado"
     flash:
       deleted: "Pendiente eliminado."
+  daily_product_orders:
+    index:
+      title: "Orden Diaria"
+      zone_label: "Zona"
+      zone_placeholder: "Selecciona una zona"
+      generate_button: "Generar"
+      table_day: "Día"
+      table_zone: "Zona"
+      table_actions: "Acción"
+      download_button: "Descargar consolidado"
+      no_batches: "Aún no se ha generado ninguna orden diaria."
+    generate:
+      missing_zone: "Selecciona una zona antes de generar."
+      generated: "Orden diaria generada para %{zone}."
