@@ -1,0 +1,10 @@
+<%
+  badge_classes = case pending_product.state
+                  when "pending" then "bg-accent/10 text-accent"
+                  when "delivered" then "bg-state-delivered/10 text-state-delivered"
+                  else "text-text-muted"
+                  end
+%>
+<span class="rounded px-2 py-1 text-xs font-medium <%= badge_classes %>">
+  <%= t("pending_products.states.#{pending_product.state}") %>
+</span>

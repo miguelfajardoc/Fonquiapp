@@ -1,0 +1,14 @@
+<div id="<%= dom_id(client, :pending_products) %>" class="mt-4 flex flex-col">
+  <% if pending_products.any? %>
+    <div class="grid grid-cols-4 gap-2 border-b border-border pb-2 text-xs font-medium text-text-muted sm:grid-cols-5">
+      <span><%= t("pending_products.client_panel.col_date") %></span>
+      <span><%= t("pending_products.client_panel.col_product") %></span>
+      <span><%= t("pending_products.client_panel.col_quantity") %></span>
+      <span><%= t("pending_products.client_panel.col_state") %></span>
+      <span class="col-span-4 sm:col-span-1"><%= t("pending_products.client_panel.col_actions") %></span>
+    </div>
+    <%= render partial: "pending_products/panel_item", collection: pending_products, as: :pending_product %>
+  <% else %>
+    <p class="mt-2 text-sm text-text-muted"><%= t("pending_products.client_panel.empty") %></p>
+  <% end %>
+</div>

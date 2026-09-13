@@ -18,7 +18,8 @@
               class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
         <%= link_to t("nav.products_default"), default_product_quantities_path,
               class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
-        <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_pending") %></span>
+        <%= link_to t("nav.products_pending"), pending_products_path,
+              class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
         <span class="cursor-default rounded px-3 py-1.5 text-sm text-sidebar-text-muted"><%= t("nav.products_daily_order") %></span>
       </div>
     </div>

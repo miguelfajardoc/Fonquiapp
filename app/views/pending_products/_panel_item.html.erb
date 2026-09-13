@@ -1,0 +1,9 @@
+<div id="<%= dom_id(pending_product) %>" class="grid grid-cols-4 items-center gap-2 border-b border-border py-2 text-sm last:border-0 sm:grid-cols-5">
+  <span class="text-text"><%= pending_product.created_at.strftime("%d/%m/%Y") %></span>
+  <span class="text-text"><%= pending_product.product.name %></span>
+  <span class="text-text"><%= pending_product.quantity %></span>
+  <span><%= render "pending_products/state_badge", pending_product: pending_product %></span>
+  <span class="col-span-4 sm:col-span-1">
+    <%= render "pending_products/actions", pending_product: pending_product, context: "panel" %>
+  </span>
+</div>

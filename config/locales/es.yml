@@ -141,3 +141,50 @@ es:
       created: "Default creado."
       updated: "Default actualizado."
       deleted: "Default eliminado."
+  pending_products:
+    index:
+      title: "Pendientes"
+      new_button: "Crear Pendiente"
+      table_date: "Fecha de creación"
+      table_client: "Cliente"
+      table_product: "Producto"
+      table_quantity: "Cantidad"
+      table_state: "Estado"
+      table_actions: "Acciones"
+    new:
+      title: "Crear Pendiente"
+    client_panel:
+      choose_client: "Selecciona un cliente para ver sus pendientes."
+      heading: "Pendientes Cliente %{name}"
+      empty: "Este cliente no tiene pendientes."
+      col_date: "Fecha"
+      col_product: "Producto"
+      col_quantity: "Cantidad"
+      col_state: "Estado"
+      col_actions: "Acciones"
+    edit:
+      title: "Editar Pendiente"
+      cancel: "Cancelar"
+      submit_update: "Actualizar"
+    form:
+      cancel: "Cancelar"
+      submit_create: "Crear"
+    fields:
+      client_label: "Cliente"
+      product_label: "Producto"
+      product_placeholder: "Selecciona un producto"
+      quantity_label: "Cantidad"
+      errors_summary:
+        one: "%{count} error impidió guardar este pendiente:"
+        other: "%{count} errores impidieron guardar este pendiente:"
+    actions:
+      edit: "Editar"
+      delete: "Eliminar"
+      deliver: "Entregar"
+      revert: "Marcar pendiente"
+    states:
+      pending: "Pendiente"
+      delivered: "Entregado"
+      canceled: "Cancelado"
+    flash:
+      deleted: "Pendiente eliminado."

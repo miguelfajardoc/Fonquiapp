@@ -1,0 +1,11 @@
+<%= form_with model: pending_product, url: pending_products_path, id: "pending_product_form",
+      class: "flex flex-col gap-4 max-w-md" do |form| %>
+  <%= render "pending_products/fields", form: form, pending_product: pending_product %>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to t("pending_products.form.cancel"), pending_products_path,
+          class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
+    <%= form.submit t("pending_products.form.submit_create"),
+          class: "h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer" %>
+  </div>
+<% end %>

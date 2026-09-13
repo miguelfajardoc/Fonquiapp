@@ -1,0 +1,24 @@
+<div class="flex flex-wrap gap-2">
+  <button type="button"
+          class="rounded border border-border px-3 py-1.5 text-text"
+          data-action="pending-product-edit-modal#open"
+          data-pending-product-edit-modal-url-param="<%= edit_pending_product_path(pending_product, context: context) %>">
+    <%= t("pending_products.actions.edit") %>
+  </button>
+
+  <% unless pending_product.canceled? %>
+    <%= button_to t("pending_products.actions.#{pending_product.pending? ? "deliver" : "revert"}"),
+          toggle_state_pending_product_path(pending_product, context: context),
+          method: :patch,
+          form: { class: "inline" },
+          class: "rounded border border-border px-3 py-1.5 text-text" %>
+  <% end %>
+
+  <button type="button"
+          class="rounded border border-border px-3 py-1.5 text-text"
+          data-action="modal#open"
+          data-modal-name-param="<%= "#{pending_product.client.name} / #{pending_product.product.name}" %>"
+          data-modal-url-param="<%= pending_product_path(pending_product) %>">
+    <%= t("pending_products.actions.delete") %>
+  </button>
+</div>

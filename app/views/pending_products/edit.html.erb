@@ -1,0 +1,19 @@
+<%= turbo_frame_tag "pending_product_edit_modal" do %>
+  <div class="flex flex-col gap-4">
+    <h2 class="text-lg font-semibold text-text"><%= t(".title") %></h2>
+
+    <%= form_with model: @pending_product, url: pending_product_path(@pending_product, context: params[:context]),
+          class: "flex flex-col gap-4" do |form| %>
+      <%= render "pending_products/fields", form: form, pending_product: @pending_product %>
+
+      <div class="flex justify-end gap-3">
+        <button type="button" data-action="pending-product-edit-modal#close"
+                class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text">
+          <%= t(".cancel") %>
+        </button>
+        <%= form.submit t(".submit_update"),
+              class: "h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

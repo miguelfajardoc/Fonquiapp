@@ -1,0 +1,5 @@
+<dialog data-pending-product-edit-modal-target="dialog"
+        data-action="cancel->pending-product-edit-modal#close turbo:submit-end->pending-product-edit-modal#submitEnd"
+        class="m-auto w-full max-w-md rounded border border-border bg-surface p-6 text-text backdrop:bg-text/40">
+  <%= turbo_frame_tag "pending_product_edit_modal", data: { pending_product_edit_modal_target: "frame" } %>
+</dialog>

@@ -15,6 +15,10 @@ Rails.application.routes.draw do
   resources :default_product_quantities, except: [:show] do
     collection { get :client_options }
   end
+  resources :pending_products, except: [:show] do
+    member { patch :toggle_state }
+    collection { get :client_options }
+  end
 
   # Defines the root path route ("/")
   # root "posts#index"

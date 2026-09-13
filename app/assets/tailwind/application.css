@@ -19,6 +19,7 @@
   --sidebar-bg: #16140F;
   --sidebar-text: #DAD5C8;
   --sidebar-text-muted: #8B8577;
+  --state-delivered: #2E7D32;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -34,6 +35,7 @@
     --sidebar-bg: #0A0908;
     --sidebar-text: #E8E2D2;
     --sidebar-text-muted: #8A8272;
+    --state-delivered: #4CAF50;
   }
 }
 
@@ -50,6 +52,7 @@
   --color-sidebar-bg: var(--sidebar-bg);
   --color-sidebar-text: var(--sidebar-text);
   --color-sidebar-text-muted: var(--sidebar-text-muted);
+  --color-state-delivered: var(--state-delivered);
 }
 
 /*

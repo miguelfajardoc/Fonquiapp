@@ -1,0 +1,8 @@
+<% if selected_client %>
+  <h2 class="text-lg font-semibold text-text">
+    <%= t(".heading", name: selected_client.name) %>
+  </h2>
+  <%= render "pending_products/client_pending_list", client: selected_client, pending_products: client_pending_products %>
+<% else %>
+  <p class="text-sm text-text-muted"><%= t(".choose_client") %></p>
+<% end %>
