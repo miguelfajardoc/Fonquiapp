@@ -37,4 +37,15 @@ RSpec.describe Client, type: :model do
       expect(create(:client, zone: zone).zone).to eq(zone)
     end
   end
+
+  describe "deletion" do
+    it "is blocked while the client still has route stops" do
+      client = create(:client)
+      create(:route_stop, client: client)
+
+      expect(client.destroy).to be_falsey
+      expect(client.errors[:base]).to be_present
+      expect(Client.exists?(client.id)).to be(true)
+    end
+  end
 end

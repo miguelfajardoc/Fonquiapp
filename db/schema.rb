@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_10_223242) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_30_020102) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_223242) do
     t.index ["name"], name: "index_products_on_name", unique: true
   end
 
+  create_table "route_stops", force: :cascade do |t|
+    t.bigint "client_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "position"
+    t.bigint "route_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_route_stops_on_client_id"
+    t.index ["route_id", "client_id"], name: "index_route_stops_on_route_id_and_client_id", unique: true
+    t.index ["route_id", "position"], name: "index_route_stops_on_route_id_and_position"
+    t.index ["route_id"], name: "index_route_stops_on_route_id"
+  end
+
+  create_table "routes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "zone_id", null: false
+    t.index ["zone_id", "name"], name: "index_routes_on_zone_id_and_name", unique: true
+    t.index ["zone_id"], name: "index_routes_on_zone_id"
+  end
+
   create_table "zones", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "name", null: false
@@ -89,4 +110,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_10_223242) do
   add_foreign_key "pending_products", "clients"
   add_foreign_key "pending_products", "products"
   add_foreign_key "pending_products", "zones"
+  add_foreign_key "route_stops", "clients"
+  add_foreign_key "route_stops", "routes"
+  add_foreign_key "routes", "zones"
 end

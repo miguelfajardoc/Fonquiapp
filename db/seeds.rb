@@ -41,6 +41,17 @@ zones.each do |zone|
 end
 clients = Client.all.to_a
 
+# --- Routes ---------------------------------------------------------------
+routes = zones.flat_map do |zone|
+  (1..2).map { |n| Route.find_or_create_by!(zone: zone, name: "Ruta #{n}") }
+end
+
+# --- Route stops (regenerated every run) -----------------------------------
+RouteStop.delete_all
+routes.each do |route|
+  route.zone.clients.shuffle.each { |client| route.route_stops.create!(client: client) }
+end
+
 # --- Default product quantities (regenerated every run) ---------------------
 DefaultProductQuantity.delete_all
 clients.product(products).sample(12).each do |client, product|

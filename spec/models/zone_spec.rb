@@ -47,5 +47,14 @@ RSpec.describe Zone, type: :model do
 
       expect { zone.destroy }.to change(Zone, :count).by(-1)
     end
+
+    it "is blocked while the zone still has routes" do
+      zone = create(:zone)
+      create(:route, zone: zone)
+
+      expect(zone.destroy).to be_falsey
+      expect(zone.errors[:base]).to be_present
+      expect(Zone.exists?(zone.id)).to be(true)
+    end
   end
 end
