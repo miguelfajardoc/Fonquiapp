@@ -116,6 +116,7 @@ es:
       created: "Ruta creada."
       updated: "Ruta actualizada."
       deleted: "Ruta eliminada."
+      delete_blocked: "No se puede eliminar la ruta porque tiene órdenes diarias generadas."
   products:
     index:
       title: "Productos"
@@ -225,12 +226,16 @@ es:
       title: "Orden Diaria"
       zone_label: "Zona"
       zone_placeholder: "Selecciona una zona"
+      route_label: "Ruta"
+      route_placeholder: "Selecciona una ruta"
       generate_button: "Generar"
       table_day: "Día"
       table_zone: "Zona"
+      table_route: "Ruta"
       table_actions: "Acción"
       download_button: "Descargar consolidado"
       no_batches: "Aún no se ha generado ninguna orden diaria."
     generate:
       missing_zone: "Selecciona una zona antes de generar."
-      generated: "Orden diaria generada para %{zone}."
+      missing_route: "Selecciona una ruta de la zona antes de generar."
+      generated: "Orden diaria generada para %{zone} - %{route}."

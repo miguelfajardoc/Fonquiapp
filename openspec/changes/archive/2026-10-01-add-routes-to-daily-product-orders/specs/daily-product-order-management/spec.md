@@ -1,13 +1,12 @@
-# daily-product-order-management Specification
+## RENAMED Requirements
 
-## Purpose
+- FROM: `### Requirement: Zone-scoped batch generation`
+- TO: `### Requirement: Route-scoped batch generation`
 
-The daily product order management flow lets staff generate a zone's daily
-delivery totals (standing defaults plus pending deliveries) with one action,
-review what has been generated, and download a consolidated pick sheet for
-a generated batch, without needing console or database access.
+- FROM: `### Requirement: Regenerating a zone on the same day replaces its batch`
+- TO: `### Requirement: Regenerating a route on the same day replaces its batch`
 
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Daily product order management routes
 
@@ -256,6 +255,8 @@ appear in the client table.
   batch's consolidated spreadsheet is then downloaded
 - **THEN** the product totals table still shows the quantity of 5 that was
   generated, unaffected by the later change
+
+## ADDED Requirements
 
 ### Requirement: Paginated batch listing
 

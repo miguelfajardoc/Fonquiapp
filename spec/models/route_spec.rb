@@ -71,5 +71,16 @@ RSpec.describe Route, type: :model do
       expect { route.destroy }.to change(RouteStop, :count).by(-2)
       expect(Route.exists?(route.id)).to be(false)
     end
+
+    it "cannot be deleted while a daily product order references it, keeping its stops" do
+      route = create(:route)
+      create_list(:route_stop, 2, route: route)
+      create(:daily_product_order, route: route, zone: route.zone)
+
+      expect(route.destroy).to be_falsey
+      expect(route.errors[:base]).to be_present
+      expect(Route.exists?(route.id)).to be(true)
+      expect(RouteStop.where(route: route).count).to eq(2)
+    end
   end
 end

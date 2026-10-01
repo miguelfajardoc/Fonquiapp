@@ -3,38 +3,49 @@ class DailyProductOrdersController < ApplicationController
 
   def index
     @zones = Zone.order(:name)
-    @batches = load_batches
+    @selected_zone_id = params[:zone_id].presence
+    @routes = @selected_zone_id ? Route.where(zone_id: @selected_zone_id).order(:name) : Route.none
+    @pagy, @batches = pagy(:offset, batches_scope)
   end
 
   def generate
-    zone = Zone.find_by(id: params[:zone_id])
+    return redirect_to(daily_product_orders_path, alert: t(".missing_zone")) if params[:zone_id].blank?
 
-    if zone.nil?
-      redirect_to daily_product_orders_path, alert: t(".missing_zone")
-    else
-      DailyProductOrderGeneration.new(zone: zone).call
-      redirect_to daily_product_orders_path, notice: t(".generated", zone: zone.name)
-    end
+    route = route_in_selected_zone
+    return redirect_to(daily_product_orders_path, alert: t(".missing_route")) if route.nil?
+
+    DailyProductOrderGeneration.new(route: route).call
+    redirect_to daily_product_orders_path, notice: generated_notice(route)
   end
 
   def consolidated
-    zone = Zone.find(params.expect(:zone_id))
+    route = Route.find(params.expect(:route_id))
     day = Date.parse(params.expect(:day))
-    package = DailyProductOrderConsolidation.new(zone: zone, day: day).call
+    package = DailyProductOrderConsolidation.new(route: route, day: day).call
 
-    send_data package.to_stream.read,
-              filename: "consolidado_#{zone.name.parameterize}_#{day.iso8601}.xlsx",
-              type: XLSX_MIME_TYPE
+    send_data package.to_stream.read, filename: consolidated_filename(route, day), type: XLSX_MIME_TYPE
   end
 
   private
 
-  def load_batches
-    zones_by_id = @zones.index_by(&:id)
-    batches = DailyProductOrder.select(:day, :zone_id).distinct.filter_map do |batch|
-      zone = zones_by_id[batch.zone_id]
-      { day: batch.day, zone: zone } if zone
-    end
-    batches.sort_by { |batch| [-batch[:day].jd, batch[:zone].name] }
+  def route_in_selected_zone
+    Route.find_by(id: params[:route_id], zone_id: params[:zone_id])
+  end
+
+  def generated_notice(route)
+    t("daily_product_orders.generate.generated", zone: route.zone.name, route: route.name)
+  end
+
+  def consolidated_filename(route, day)
+    "consolidado_#{route.zone.name.parameterize}_#{route.name.parameterize}_#{day.iso8601}.xlsx"
+  end
+
+  def batches_scope
+    DailyProductOrder
+      .joins(:zone, :route)
+      .group(:day, :zone_id, :route_id, "zones.name", "routes.name")
+      .select(:day, :zone_id, :route_id, "zones.name AS zone_name", "routes.name AS route_name")
+      .order(day: :desc)
+      .order("zones.name ASC, routes.name ASC")
   end
 end

@@ -3,17 +3,31 @@
 <div class="flex w-full flex-col gap-8">
   <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
 
-  <%= form_with url: generate_daily_product_orders_path, method: :post, class: "flex items-end gap-3" do %>
+  <%= form_with url: generate_daily_product_orders_path, method: :post, class: "flex items-end gap-3",
+        data: { controller: "client-zone-filter" } do %>
     <div class="flex flex-col gap-1">
       <label class="text-sm font-medium text-text" for="zone_id"><%= t(".zone_label") %></label>
-      <select name="zone_id" id="zone_id"
+      <select name="zone_id" id="zone_id" data-action="change->client-zone-filter#reload"
               class="h-11 rounded border border-border bg-surface px-3 text-sm text-text
                      focus:outline-none focus:ring-2 focus:ring-accent">
         <option value=""><%= t(".zone_placeholder") %></option>
         <% @zones.each do |zone| %>
-          <option value="<%= zone.id %>"><%= zone.name %></option>
+          <option value="<%= zone.id %>" <%= "selected" if zone.id.to_s == @selected_zone_id %>><%= zone.name %></option>
         <% end %>
       </select>
+    </div>
+    <div class="flex flex-col gap-1">
+      <label class="text-sm font-medium text-text" for="route_id"><%= t(".route_label") %></label>
+      <%= turbo_frame_tag "route_select", data: { client_zone_filter_target: "frame" } do %>
+        <select name="route_id" id="route_id"
+                class="h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                       focus:outline-none focus:ring-2 focus:ring-accent">
+          <option value=""><%= t(".route_placeholder") %></option>
+          <% @routes.each do |route| %>
+            <option value="<%= route.id %>"><%= route.name %></option>
+          <% end %>
+        </select>
+      <% end %>
     </div>
     <button type="submit"
             class="h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer">
@@ -27,22 +41,24 @@
         <tr class="border-b border-border text-text-muted">
           <th class="px-4 py-3 font-medium"><%= t(".table_day") %></th>
           <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
+          <th class="px-4 py-3 font-medium"><%= t(".table_route") %></th>
           <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
         </tr>
       </thead>
       <tbody>
         <% if @batches.empty? %>
           <tr>
-            <td class="px-4 py-3 text-text-muted" colspan="3"><%= t(".no_batches") %></td>
+            <td class="px-4 py-3 text-text-muted" colspan="4"><%= t(".no_batches") %></td>
           </tr>
         <% end %>
         <% @batches.each do |batch| %>
           <tr class="border-b border-border last:border-0">
-            <td class="px-4 py-3 text-text"><%= batch[:day].strftime("%d/%m/%Y") %></td>
-            <td class="px-4 py-3 text-text"><%= batch[:zone].name %></td>
+            <td class="px-4 py-3 text-text"><%= batch.day.strftime("%d/%m/%Y") %></td>
+            <td class="px-4 py-3 text-text"><%= batch.zone_name %></td>
+            <td class="px-4 py-3 text-text"><%= batch.route_name %></td>
             <td class="px-4 py-3">
               <%= link_to t(".download_button"),
-                    consolidated_daily_product_orders_path(zone_id: batch[:zone].id, day: batch[:day].iso8601),
+                    consolidated_daily_product_orders_path(route_id: batch.route_id, day: batch.day.iso8601),
                     class: "rounded border border-border px-3 py-1.5 text-text", data: { turbo: false } %>
             </td>
           </tr>
@@ -50,4 +66,14 @@
       </tbody>
     </table>
   </div>
+
+  <% if @pagy.pages > 1 %>
+    <div class="flex justify-center
+                [&_nav]:flex [&_nav]:gap-1
+                [&_a]:rounded [&_a]:border [&_a]:border-border [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-sm [&_a]:text-text
+                [&_a[aria-current]]:bg-accent [&_a[aria-current]]:text-accent-contrast
+                [&_a[aria-disabled]:not([aria-current])]:opacity-50">
+      <%== @pagy.series_nav %>
+    </div>
+  <% end %>
 </div>

@@ -233,5 +233,18 @@ RSpec.describe "Routes", type: :request do
       expect(response).to redirect_to(routes_path)
       expect(flash[:notice]).to be_present
     end
+
+    it "keeps a route referenced by a daily product order, with its stops, and shows an error" do
+      route = create(:route)
+      create_list(:route_stop, 2, route: route)
+      create(:daily_product_order, route: route, zone: route.zone)
+
+      delete route_path(route)
+
+      expect(Route.exists?(route.id)).to be(true)
+      expect(RouteStop.where(route: route).count).to eq(2)
+      expect(response).to redirect_to(routes_path)
+      expect(flash[:alert]).to eq(I18n.t("routes.flash.delete_blocked"))
+    end
   end
 end

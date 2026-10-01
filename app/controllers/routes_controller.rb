@@ -30,8 +30,11 @@ class RoutesController < ApplicationController
   end
 
   def destroy
-    @route.destroy
-    redirect_to routes_path, notice: t("routes.flash.deleted")
+    if @route.destroy
+      redirect_to routes_path, notice: t("routes.flash.deleted")
+    else
+      redirect_to routes_path, alert: t("routes.flash.delete_blocked")
+    end
   end
 
   def client_options

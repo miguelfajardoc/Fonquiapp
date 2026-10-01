@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe DailyProductOrder, type: :model do
   describe "creation" do
-    it "is valid with the three references, a quantity and a day" do
+    it "is valid with the four references, a quantity and a day" do
       expect(build(:daily_product_order)).to be_valid
     end
 
@@ -35,9 +35,21 @@ RSpec.describe DailyProductOrder, type: :model do
       expect(order.errors[:client]).to be_present
       expect(order.errors[:zone]).to be_present
     end
+
+    it "is invalid without a route" do
+      order = build(:daily_product_order, route: nil)
+      expect(order).not_to be_valid
+      expect(order.errors[:route]).to be_present
+    end
   end
 
   describe "referential integrity" do
+    it "cannot be created with a route that does not exist" do
+      order = build(:daily_product_order)
+      order.route_id = 0
+      expect { order.save(validate: false) }.to raise_error(ActiveRecord::InvalidForeignKey)
+    end
+
     it "allows repeated orders for the same product+client+zone on the same day" do
       first = create(:daily_product_order, day: Date.new(2026, 9, 10))
       second = build(:daily_product_order,

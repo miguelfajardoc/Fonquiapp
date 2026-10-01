@@ -1,8 +1,8 @@
 class DailyProductOrderConsolidation
   FIXED_HEADERS = %w[Cliente Dirección Ubicación].freeze
 
-  def initialize(zone:, day:)
-    @zone = zone
+  def initialize(route:, day:)
+    @route = route
     @day = day
   end
 
@@ -20,7 +20,7 @@ class DailyProductOrderConsolidation
   end
 
   def add_client_table(sheet)
-    clients = Client.where(zone: @zone).order(:name)
+    clients = @route.route_stops.includes(:client).map(&:client)
     pending_by_client = clients.index_with { |client| current_pending_products(client) }
     max_pending = pending_by_client.values.map(&:size).max || 0
 
@@ -35,7 +35,7 @@ class DailyProductOrderConsolidation
   end
 
   def batch_orders
-    DailyProductOrder.where(zone: @zone, day: @day).includes(:client, :product)
+    DailyProductOrder.where(route: @route, day: @day).includes(:client, :product)
   end
 
   def current_pending_products(client)

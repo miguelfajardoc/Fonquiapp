@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_30_020102) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_01_165012) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,10 +31,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_020102) do
     t.date "day", null: false
     t.bigint "product_id", null: false
     t.integer "quantity", null: false
+    t.bigint "route_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "zone_id", null: false
     t.index ["client_id"], name: "index_daily_product_orders_on_client_id"
     t.index ["product_id"], name: "index_daily_product_orders_on_product_id"
+    t.index ["route_id", "day"], name: "index_daily_product_orders_on_route_id_and_day"
+    t.index ["route_id"], name: "index_daily_product_orders_on_route_id"
     t.index ["zone_id"], name: "index_daily_product_orders_on_zone_id"
   end
 
@@ -103,6 +106,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_020102) do
   add_foreign_key "clients", "zones"
   add_foreign_key "daily_product_orders", "clients"
   add_foreign_key "daily_product_orders", "products"
+  add_foreign_key "daily_product_orders", "routes"
   add_foreign_key "daily_product_orders", "zones"
   add_foreign_key "default_product_quantities", "clients"
   add_foreign_key "default_product_quantities", "products"
