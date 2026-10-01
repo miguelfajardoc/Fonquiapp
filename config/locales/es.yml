@@ -10,6 +10,7 @@ es:
     brand: "Fonquilac"
     zones: "Zonas"
     clients: "Clientes"
+    routes: "Rutas"
     products: "Productos"
     products_default: "Default"
     products_pending: "Pendientes"
@@ -84,6 +85,37 @@ es:
       created: "Cliente creado."
       updated: "Cliente actualizado."
       deleted: "Cliente eliminado."
+  routes:
+    index:
+      title: "Rutas"
+      new_button: "Crear ruta"
+      table_zone: "Zona"
+      table_name: "Nombre"
+      table_clients: "Clientes"
+      table_actions: "Acciones"
+      edit: "Editar"
+      delete: "Eliminar"
+    new:
+      title: "Nueva ruta"
+    edit:
+      title: "Editar ruta"
+    form:
+      zone_label: "Zona"
+      zone_placeholder: "Selecciona una zona"
+      name_label: "Nombre"
+      stops_label: "Paradas"
+      add_stop: "+ Agregar cliente"
+      remove_stop: "Quitar"
+      cancel: "Cancelar"
+      submit_create: "Crear"
+      submit_update: "Actualizar"
+      errors_summary:
+        one: "%{count} error impidió guardar esta ruta:"
+        other: "%{count} errores impidieron guardar esta ruta:"
+    flash:
+      created: "Ruta creada."
+      updated: "Ruta actualizada."
+      deleted: "Ruta eliminada."
   products:
     index:
       title: "Productos"

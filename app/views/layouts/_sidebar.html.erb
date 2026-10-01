@@ -8,6 +8,8 @@
           class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "zones" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
     <%= link_to t("nav.clients"), clients_path,
           class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "clients" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
+    <%= link_to t("nav.routes"), routes_path,
+          class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "routes" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
 
     <div class="group">
       <div class="cursor-default rounded px-3 py-2 text-sm font-medium text-sidebar-text">

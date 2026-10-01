@@ -5,4 +5,13 @@ class RouteStop < ApplicationRecord
   acts_as_list scope: :route
 
   validates :client_id, uniqueness: { scope: :route_id }
+  validate :client_in_routes_zone
+
+  private
+
+  def client_in_routes_zone
+    return if route.nil? || client.nil?
+
+    errors.add(:client, :invalid) unless client.zone&.id == route.zone&.id
+  end
 end

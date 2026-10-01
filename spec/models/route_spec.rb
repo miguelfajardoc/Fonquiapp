@@ -53,8 +53,8 @@ RSpec.describe Route, type: :model do
   describe "#clients" do
     it "lists the clients reachable through its route stops, in stop order" do
       route = create(:route)
-      client_a = create(:client)
-      client_b = create(:client)
+      client_a = create(:client, zone: route.zone)
+      client_b = create(:client, zone: route.zone)
       create(:route_stop, route: route, client: client_b)
       create(:route_stop, route: route, client: client_a)
       RouteStop.find_by(route: route, client: client_a).insert_at(1)

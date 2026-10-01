@@ -1,0 +1,27 @@
+<li class="flex items-center gap-3 rounded border border-border bg-surface px-3 py-2"
+    data-route-stops-target="row">
+  <span class="cursor-grab select-none text-text-muted" aria-hidden="true" data-role="drag-handle">::</span>
+
+  <select name="route[route_stops_attributes][][client_id]"
+          data-role="client-select"
+          data-action="change->route-stops#clientChanged"
+          class="h-11 flex-1 rounded border border-border bg-surface px-3 text-sm text-text
+                 focus:outline-none focus:ring-2 focus:ring-accent">
+    <option value=""></option>
+    <% clients.each do |client| %>
+      <option value="<%= client.id %>" <%= "selected" if client.id == selected_client_id %>><%= client.name %></option>
+    <% end %>
+  </select>
+
+  <% if stop_id %>
+    <input type="hidden" name="route[route_stops_attributes][][id]" value="<%= stop_id %>">
+  <% end %>
+  <input type="hidden" name="route[route_stops_attributes][][position]" data-role="position-input" value="<%= position %>">
+  <input type="hidden" name="route[route_stops_attributes][][_destroy]" value="false"
+         data-role="destroy-input" data-persisted="<%= stop_id.present? %>">
+
+  <button type="button" data-action="route-stops#removeRow"
+          class="rounded border border-border px-3 py-1.5 text-sm text-text">
+    <%= t("routes.form.remove_stop") %>
+  </button>
+</li>

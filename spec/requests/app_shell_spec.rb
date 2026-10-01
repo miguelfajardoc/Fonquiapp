@@ -2,7 +2,7 @@ require "rails_helper"
 
 RSpec.describe "App shell", type: :request do
   describe "sidebar and header" do
-    it "renders the brand label and the Zonas/Clientes links on the zone index" do
+    it "renders the brand label and the Zonas/Clientes/Rutas links on the zone index" do
       get zones_path
 
       expect(response.body).to include("Fonquilac")
@@ -10,6 +10,7 @@ RSpec.describe "App shell", type: :request do
 
       expect(links.find { |a| a.text.strip == "Zonas" }["href"]).to eq(zones_path)
       expect(links.find { |a| a.text.strip == "Clientes" }["href"]).to eq(clients_path)
+      expect(links.find { |a| a.text.strip == "Rutas" }["href"]).to eq(routes_path)
     end
 
     it "shows the page title in the header on the zone and client index" do
@@ -20,26 +21,43 @@ RSpec.describe "App shell", type: :request do
       expect(response.parsed_body.at_css("header").text).to include("Clientes")
     end
 
-    it "highlights Zonas but not Clientes on the zone index" do
+    it "highlights Zonas but not Clientes or Rutas on the zone index" do
       get zones_path
       doc = response.parsed_body
 
       zonas_link = doc.css("a").find { |a| a.text.strip == "Zonas" }
       clientes_link = doc.css("a").find { |a| a.text.strip == "Clientes" }
+      rutas_link = doc.css("a").find { |a| a.text.strip == "Rutas" }
 
       expect(zonas_link["class"]).to include("text-accent")
       expect(clientes_link["class"]).not_to include("text-accent")
+      expect(rutas_link["class"]).not_to include("text-accent")
     end
 
-    it "highlights Clientes but not Zonas on the client index" do
+    it "highlights Clientes but not Zonas or Rutas on the client index" do
       get clients_path
       doc = response.parsed_body
 
       zonas_link = doc.css("a").find { |a| a.text.strip == "Zonas" }
       clientes_link = doc.css("a").find { |a| a.text.strip == "Clientes" }
+      rutas_link = doc.css("a").find { |a| a.text.strip == "Rutas" }
 
       expect(clientes_link["class"]).to include("text-accent")
       expect(zonas_link["class"]).not_to include("text-accent")
+      expect(rutas_link["class"]).not_to include("text-accent")
+    end
+
+    it "highlights Rutas but not Zonas or Clientes on the route index" do
+      get routes_path
+      doc = response.parsed_body
+
+      zonas_link = doc.css("a").find { |a| a.text.strip == "Zonas" }
+      clientes_link = doc.css("a").find { |a| a.text.strip == "Clientes" }
+      rutas_link = doc.css("a").find { |a| a.text.strip == "Rutas" }
+
+      expect(rutas_link["class"]).to include("text-accent")
+      expect(zonas_link["class"]).not_to include("text-accent")
+      expect(clientes_link["class"]).not_to include("text-accent")
     end
 
     it "lists Productos submenu entries in order, all linking to their indexes" do

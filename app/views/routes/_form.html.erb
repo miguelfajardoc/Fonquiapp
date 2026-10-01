@@ -1,0 +1,62 @@
+<%= form_with model: route, class: "flex flex-col gap-6 max-w-2xl",
+      data: { controller: "route-stops", route_stops_client_options_url_value: client_options_routes_path } do |form| %>
+  <% if route.errors.any? %>
+    <div class="rounded border border-accent bg-surface-2 px-4 py-3 text-sm text-text">
+      <p class="font-semibold"><%= t(".errors_summary", count: route.errors.count) %></p>
+      <ul class="list-disc pl-5">
+        <% route.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="flex flex-col gap-1">
+    <%= form.label :zone_id, t(".zone_label"), class: "text-sm font-medium text-text" %>
+    <%= form.select :zone_id,
+          options_from_collection_for_select(Zone.order(:name), :id, :name, route.zone_id),
+          { include_blank: t(".zone_placeholder") },
+          { data: { action: "change->route-stops#zoneChanged" },
+            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                     focus:outline-none focus:ring-2 focus:ring-accent" } %>
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <%= form.label :name, t(".name_label"), class: "text-sm font-medium text-text" %>
+    <%= form.text_field :name,
+          class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                   focus:outline-none focus:ring-2 focus:ring-accent" %>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <span class="text-sm font-medium text-text"><%= t(".stops_label") %></span>
+
+    <ul data-route-stops-target="list" class="flex flex-col gap-2">
+      <% route.route_stops.reject(&:marked_for_destruction?).each_with_index do |stop, index| %>
+        <%= render "routes/stop_row",
+              clients: route.zone&.clients&.order(:name) || [],
+              selected_client_id: stop.client_id,
+              position: index + 1,
+              stop_id: stop.persisted? ? stop.id : nil %>
+      <% end %>
+    </ul>
+
+    <template data-route-stops-target="template">
+      <%= render "routes/stop_row",
+            clients: route.zone&.clients&.order(:name) || [],
+            selected_client_id: nil, position: nil, stop_id: nil %>
+    </template>
+
+    <button type="button" data-action="route-stops#addRow"
+            class="self-start rounded border border-border px-3 py-1.5 text-sm text-text">
+      <%= t(".add_stop") %>
+    </button>
+  </div>
+
+  <div class="flex justify-end gap-3">
+    <%= link_to t(".cancel"), routes_path,
+          class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
+    <%= form.submit(route.persisted? ? t(".submit_update") : t(".submit_create"),
+          class: "h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer") %>
+  </div>
+<% end %>

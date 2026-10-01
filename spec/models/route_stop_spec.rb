@@ -50,16 +50,36 @@ RSpec.describe RouteStop, type: :model do
 
     it "allows the same client on a different route" do
       existing = create(:route_stop)
-      other = build(:route_stop, route: create(:route), client: existing.client)
+      other = build(:route_stop, route: create(:route, zone: existing.client.zone), client: existing.client)
 
       expect(other).to be_valid
     end
 
     it "allows a different client on the same route" do
       existing = create(:route_stop)
-      other = build(:route_stop, route: existing.route, client: create(:client))
+      other = build(:route_stop, route: existing.route, client: create(:client, zone: existing.route.zone))
 
       expect(other).to be_valid
+    end
+  end
+
+  describe "client must belong to the route's zone" do
+    it "rejects a client from a different zone than the route" do
+      route = create(:route)
+      client = create(:client)
+
+      stop = build(:route_stop, route: route, client: client)
+
+      expect(stop).not_to be_valid
+      expect(stop.errors[:client]).to be_present
+    end
+
+    it "accepts a client that belongs to the route's zone" do
+      zone = create(:zone)
+      route = create(:route, zone: zone)
+      client = create(:client, zone: zone)
+
+      expect(build(:route_stop, route: route, client: client)).to be_valid
     end
   end
 

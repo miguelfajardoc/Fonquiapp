@@ -61,6 +61,9 @@ within its route's sequence. Referential integrity for the route and client
 references SHALL be enforced by the datastore. A given client SHALL appear
 at most once within the same route, but the same client MAY appear in
 different routes, and different clients MAY occupy stops in the same route.
+The referenced client SHALL belong to the same zone as the referenced
+route; a route stop pairing a route and a client from different zones SHALL
+NOT be persisted, regardless of how it is created.
 
 #### Scenario: Route stop created with a route and a client
 
@@ -98,6 +101,19 @@ different routes, and different clients MAY occupy stops in the same route.
 
 - **GIVEN** a client has a stop on one route
 - **WHEN** a route stop is created for that same client on a different route
+- **THEN** the route stop is persisted
+
+#### Scenario: Route stop rejected when the client belongs to a different zone than the route
+
+- **GIVEN** a route belongs to one zone and a client belongs to a different zone
+- **WHEN** a route stop is created referencing that route and that client
+- **THEN** the route stop is not persisted
+- **AND** a validation error is reported
+
+#### Scenario: Route stop accepted when the client belongs to the route's zone
+
+- **GIVEN** a route and a client that both belong to the same zone
+- **WHEN** a route stop is created referencing that route and that client
 - **THEN** the route stop is persisted
 
 ### Requirement: Route stop position ordering

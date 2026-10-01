@@ -11,6 +11,9 @@ Rails.application.routes.draw do
 
   resources :zones, except: [:show]
   resources :clients
+  resources :routes, except: [:show] do
+    collection { get :client_options }
+  end
   resources :products, except: [:show]
   resources :default_product_quantities, except: [:show] do
     collection { get :client_options }

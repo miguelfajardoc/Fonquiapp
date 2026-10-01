@@ -24,8 +24,9 @@ above its navigation entries.
 ### Requirement: Top-level navigation entries
 
 The sidebar SHALL list, in order, a "Zonas" entry linking to the zone
-index, a "Clientes" entry linking to the client index, and a "Productos"
-entry that is not itself a link.
+index, a "Clientes" entry linking to the client index, a "Rutas" entry
+linking to the route index, and a "Productos" entry that is not itself a
+link.
 
 #### Scenario: Zonas and Clientes navigate to their sections
 
@@ -33,6 +34,11 @@ entry that is not itself a link.
 - **THEN** the zone index is displayed
 - **WHEN** the "Clientes" entry is activated
 - **THEN** the client index is displayed
+
+#### Scenario: Rutas navigates to the route index
+
+- **WHEN** the "Rutas" entry is activated
+- **THEN** the route index is displayed
 
 #### Scenario: Productos entry has no direct destination
 
@@ -83,21 +89,27 @@ Diaria" to the daily product order index.
 
 ### Requirement: Active section highlighting
 
-The sidebar SHALL visually distinguish the top-level entry ("Zonas" or
-"Clientes") matching the page currently being viewed from the other
-entries.
+The sidebar SHALL visually distinguish the top-level entry ("Zonas",
+"Clientes", or "Rutas") matching the page currently being viewed from the
+other entries.
 
 #### Scenario: Viewing the zone index highlights Zonas
 
 - **WHEN** the zone index is displayed
 - **THEN** the "Zonas" entry is shown in its highlighted (active) state
-- **AND** the "Clientes" entry is not
+- **AND** the "Clientes" and "Rutas" entries are not
 
 #### Scenario: Viewing the client index highlights Clientes
 
 - **WHEN** the client index is displayed
 - **THEN** the "Clientes" entry is shown in its highlighted (active) state
-- **AND** the "Zonas" entry is not
+- **AND** the "Zonas" and "Rutas" entries are not
+
+#### Scenario: Viewing the route index highlights Rutas
+
+- **WHEN** the route index is displayed
+- **THEN** the "Rutas" entry is shown in its highlighted (active) state
+- **AND** the "Zonas" and "Clientes" entries are not
 
 ### Requirement: No user identity displayed
 
