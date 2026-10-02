@@ -67,13 +67,5 @@
     </table>
   </div>
 
-  <% if @pagy.pages > 1 %>
-    <div class="flex justify-center
-                [&_nav]:flex [&_nav]:gap-1
-                [&_a]:rounded [&_a]:border [&_a]:border-border [&_a]:px-3 [&_a]:py-1.5 [&_a]:text-sm [&_a]:text-text
-                [&_a[aria-current]]:bg-accent [&_a[aria-current]]:text-accent-contrast
-                [&_a[aria-disabled]:not([aria-current])]:opacity-50">
-      <%== @pagy.series_nav %>
-    </div>
-  <% end %>
+  <%= render "shared/pagination", pagy: @pagy %>
 </div>

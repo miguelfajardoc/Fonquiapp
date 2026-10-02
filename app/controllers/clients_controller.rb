@@ -1,8 +1,13 @@
 class ClientsController < ApplicationController
+  FILTER_KEYS = %i[name zone_id route_id].freeze
+
   before_action :set_client, only: %i[show edit update destroy]
 
   def index
-    @clients = Client.includes(:zone).order(:name)
+    @zones = Zone.order(:name)
+    @routes = params[:zone_id].present? ? Route.where(zone_id: params[:zone_id]).order(:name) : Route.none
+    @filters = filter_params
+    @pagy, @clients = pagy(:offset, Client.includes(:zone, :routes).filter_by(@filters).order(:name))
   end
 
   def show; end
@@ -40,6 +45,14 @@ class ClientsController < ApplicationController
   end
 
   private
+
+  # A route only applies within the selected zone, so a stale or hand-edited
+  # route_id falls back to filtering by zone alone.
+  def filter_params
+    filters = params.slice(*FILTER_KEYS).permit(*FILTER_KEYS).to_h
+    filters.delete(:route_id) unless @routes.exists?(id: filters[:route_id])
+    filters
+  end
 
   def set_client
     @client = Client.find(params.expect(:id))

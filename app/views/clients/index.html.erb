@@ -1,49 +1,97 @@
 <% content_for :title, t(".title") %>
 
 <div class="flex w-full flex-col gap-6" data-controller="modal">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <%= form_with url: clients_path, method: :get, class: "flex flex-wrap items-end gap-3",
+          data: { controller: "auto-submit client-zone-filter", turbo_frame: "clients" } do %>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="name"><%= t(".filter_name_label") %></label>
+        <input type="search" name="name" id="name" value="<%= @filters[:name] %>"
+               placeholder="<%= t(".filter_name_placeholder") %>" autocomplete="off"
+               data-action="input->auto-submit#debouncedSubmit"
+               class="h-11 rounded border border-border bg-surface px-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent">
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="zone_id"><%= t(".filter_zone_label") %></label>
+        <select name="zone_id" id="zone_id"
+                data-action="change->client-zone-filter#reload change->auto-submit#submit"
+                data-auto-submit-clear-param="route_id"
+                class="h-11 rounded border border-border bg-surface px-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent">
+          <option value=""><%= t(".filter_zone_placeholder") %></option>
+          <% @zones.each do |zone| %>
+            <option value="<%= zone.id %>" <%= "selected" if zone.id.to_s == @filters[:zone_id] %>><%= zone.name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="route_id"><%= t(".filter_route_label") %></label>
+        <%= turbo_frame_tag "client_route_filter", data: { client_zone_filter_target: "frame" } do %>
+          <select name="route_id" id="route_id" data-action="change->auto-submit#submit"
+                  class="h-11 rounded border border-border bg-surface px-3 text-sm text-text focus:outline-none focus:ring-2 focus:ring-accent">
+            <option value=""><%= t(".filter_route_placeholder") %></option>
+            <% @routes.each do |route| %>
+              <option value="<%= route.id %>" <%= "selected" if route.id.to_s == @filters[:route_id] %>><%= route.name %></option>
+            <% end %>
+          </select>
+        <% end %>
+      </div>
+      <%= link_to t(".clear_filters"), clients_path,
+            class: "flex h-11 items-center rounded border border-border px-4 text-sm text-text",
+            data: { turbo_frame: "_top" } %>
+    <% end %>
+
     <%= link_to t(".new_button"), new_client_path,
           class: "flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast" %>
   </div>
 
-  <div class="overflow-x-auto rounded border border-border bg-surface">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="border-b border-border text-text-muted">
-          <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_address") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_url") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_phone") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @clients.each do |client| %>
-          <tr class="border-b border-border last:border-0 cursor-pointer"
-              data-controller="row"
-              data-action="click->row#visit"
-              data-row-url-param="<%= client_path(client) %>">
-            <td class="px-4 py-3 text-text"><%= client.name %></td>
-            <td class="px-4 py-3 text-text"><%= client.address %></td>
-            <td class="px-4 py-3 text-text"><%= client.url %></td>
-            <td class="px-4 py-3 text-text"><%= client.phone %></td>
-            <td class="px-4 py-3 text-text"><%= client.zone.name %></td>
-            <td class="px-4 py-3" data-row-target="skip">
-              <button type="button"
-                      class="rounded border border-border px-3 py-1.5 text-text"
-                      data-action="modal#open"
-                      data-modal-name-param="<%= client.name %>"
-                      data-modal-url-param="<%= client_path(client) %>">
-                <%= t(".delete") %>
-              </button>
-            </td>
+  <%= turbo_frame_tag "clients", class: "flex flex-col gap-6", data: { turbo_action: "advance" } do %>
+    <div class="overflow-x-auto rounded border border-border bg-surface">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-border text-text-muted">
+            <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_address") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_url") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_phone") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_route") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          <% if @clients.empty? %>
+            <tr>
+              <td class="px-4 py-3 text-text-muted" colspan="7"><%= t(".no_results") %></td>
+            </tr>
+          <% end %>
+          <% @clients.each do |client| %>
+            <tr class="border-b border-border last:border-0 cursor-pointer"
+                data-controller="row"
+                data-action="click->row#visit"
+                data-row-url-param="<%= client_path(client) %>">
+              <td class="px-4 py-3 text-text"><%= client.name %></td>
+              <td class="px-4 py-3 text-text"><%= client.address %></td>
+              <td class="px-4 py-3 text-text"><%= client.url %></td>
+              <td class="px-4 py-3 text-text"><%= client.phone %></td>
+              <td class="px-4 py-3 text-text"><%= client.zone.name %></td>
+              <td class="px-4 py-3 text-text"><%= client.routes.map(&:name).sort.join(", ") %></td>
+              <td class="px-4 py-3" data-row-target="skip">
+                <button type="button"
+                        class="rounded border border-border px-3 py-1.5 text-text"
+                        data-action="modal#open"
+                        data-modal-name-param="<%= client.name %>"
+                        data-modal-url-param="<%= client_path(client) %>">
+                  <%= t(".delete") %>
+                </button>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination", pagy: @pagy %>
+  <% end %>
 
   <%= render "shared/confirm_dialog" %>
 </div>

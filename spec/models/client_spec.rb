@@ -48,4 +48,71 @@ RSpec.describe Client, type: :model do
       expect(Client.exists?(client.id)).to be(true)
     end
   end
+
+  describe ".filter_by" do
+    let(:zone) { create(:zone) }
+
+    def names(relation)
+      relation.order(:name).pluck(:name)
+    end
+
+    it "matches clients whose name contains the text" do
+      create(:client, name: "Tienda La 42", zone: zone)
+      create(:client, name: "Salsamentaria El Paisa", zone: zone)
+
+      expect(names(Client.filter_by(name: "tienda"))).to eq(["Tienda La 42"])
+    end
+
+    it "ignores case and accents in both directions" do
+      create(:client, name: "Tienda San José", zone: zone)
+      create(:client, name: "Autoservicio Dona Rosa", zone: zone)
+
+      expect(names(Client.filter_by(name: "JOSE"))).to eq(["Tienda San José"])
+      expect(names(Client.filter_by(name: "doña"))).to eq(["Autoservicio Dona Rosa"])
+    end
+
+    it "matches % and _ literally instead of as wildcards" do
+      create(:client, name: "Tienda 100%", zone: zone)
+      create(:client, name: "Tienda 1000", zone: zone)
+      create(:client, name: "Tienda A_B", zone: zone)
+      create(:client, name: "Tienda AXB", zone: zone)
+
+      expect(names(Client.filter_by(name: "100%"))).to eq(["Tienda 100%"])
+      expect(names(Client.filter_by(name: "a_b"))).to eq(["Tienda A_B"])
+    end
+
+    it "lists only the clients of the given zone" do
+      create(:client, name: "Propio", zone: zone)
+      create(:client, name: "Ajeno", zone: create(:zone))
+
+      expect(names(Client.filter_by(zone_id: zone.id))).to eq(["Propio"])
+    end
+
+    it "lists only the stops of the given route, once each" do
+      route = create(:route, zone: zone)
+      other_route = create(:route, zone: zone)
+      stop = create(:client, name: "Parada", zone: zone)
+      create(:client, name: "Sin Ruta", zone: zone)
+      create(:route_stop, route: route, client: stop)
+      create(:route_stop, route: other_route, client: stop)
+
+      expect(names(Client.filter_by(route_id: route.id))).to eq(["Parada"])
+    end
+
+    it "combines filters" do
+      create(:client, name: "Tienda Norte", zone: zone)
+      create(:client, name: "Tienda Sur", zone: zone)
+      create(:client, name: "Tienda Centro", zone: create(:zone))
+      create(:client, name: "Salsamentaria", zone: zone)
+
+      expect(names(Client.filter_by(name: "tienda", zone_id: zone.id))).to eq(["Tienda Norte", "Tienda Sur"])
+    end
+
+    it "ignores blank values" do
+      create(:client, name: "Uno", zone: zone)
+      create(:client, name: "Dos", zone: create(:zone))
+
+      expect(Client.filter_by(name: "", zone_id: nil, route_id: "").count).to eq(2)
+    end
+  end
 end
