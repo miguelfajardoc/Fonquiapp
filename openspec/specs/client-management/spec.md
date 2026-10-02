@@ -28,10 +28,12 @@ and delete a client.
 The system SHALL display, for every client that matches the active filters
 and falls on the current page, its name, address, url, phone, zone name, and
 the names of every route it is a stop of (in name order, separated by commas,
-and empty when it is a stop of no route), alongside a control to delete that
-client, and SHALL display a control to
-start creating a new client. Clients SHALL be listed in name order. Selecting
-a client elsewhere on its row SHALL open that client's detail view.
+and empty when it is a stop of no route), alongside controls to edit or
+delete that client, and SHALL display a control to start creating a new
+client. Clients SHALL be listed in name order. Choosing a client's edit
+control SHALL open that client's edit form as a full page. Selecting a client
+elsewhere on its row (other than its edit or delete control) SHALL open that
+client's detail view.
 
 #### Scenario: Index lists all clients with their fields and a delete control
 
@@ -39,7 +41,7 @@ a client elsewhere on its row SHALL open that client's detail view.
 - **WHEN** the client index is viewed
 - **THEN** every client on the current page has its name, address, url,
   phone, and zone name displayed
-- **AND** each client has a delete control
+- **AND** each client has an edit control and a delete control
 
 #### Scenario: Index shows the routes a client is a stop of
 
@@ -57,9 +59,16 @@ a client elsewhere on its row SHALL open that client's detail view.
 #### Scenario: Selecting a client row opens its detail view
 
 - **GIVEN** a client exists
-- **WHEN** that client's row is selected on the index (other than its delete
-  control)
+- **WHEN** that client's row is selected on the index (other than its edit or
+  delete control)
 - **THEN** that client's detail view is shown
+
+#### Scenario: Edit control opens the client's edit form
+
+- **GIVEN** the client index is filtered and lists a client
+- **WHEN** that client's edit control is chosen
+- **THEN** that client's edit form is shown as a full page
+- **AND** the client's detail view is not opened instead
 
 ### Requirement: Client detail view
 

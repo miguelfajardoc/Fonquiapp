@@ -78,6 +78,16 @@ RSpec.describe "DefaultProductQuantities", type: :request do
       expect(body.at_css("select[name='zone_id'] option[selected]")["value"]).to eq(zone.id.to_s)
     end
 
+    it "makes each row's Editar link open the edit page outside the table frame" do
+      record = default_for("Tienda Norte", zone)
+
+      get default_product_quantities_path(zone_id: zone.id)
+
+      link = response.parsed_body.css("turbo-frame#default_product_quantities a").find { |a| a.text.strip == "Editar" }
+      expect(link["href"]).to eq(edit_default_product_quantity_path(record))
+      expect(link["data-turbo-frame"]).to eq("_top")
+    end
+
     it "shows a message when no record matches" do
       default_for("Tienda", zone)
 

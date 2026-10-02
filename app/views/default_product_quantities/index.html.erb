@@ -52,7 +52,8 @@
               <td class="px-4 py-3">
                 <div class="flex gap-3">
                   <%= link_to t(".edit"), edit_default_product_quantity_path(default_product_quantity),
-                        class: "rounded border border-border px-3 py-1.5 text-text" %>
+                        class: "rounded border border-border px-3 py-1.5 text-text",
+                        data: { turbo_frame: "_top" } %>
                   <button type="button"
                           class="rounded border border-border px-3 py-1.5 text-text"
                           data-action="modal#open"

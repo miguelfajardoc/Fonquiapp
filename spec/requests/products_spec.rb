@@ -49,6 +49,16 @@ RSpec.describe "Products", type: :request do
       expect(response.parsed_body.at_css("input[name='name']")["value"]).to eq("ANEJO")
     end
 
+    it "makes each row's Editar link open the edit page outside the table frame" do
+      product = create(:product, name: "Queso Añejo")
+
+      get products_path(name: "queso")
+
+      link = response.parsed_body.css("turbo-frame#products a").find { |a| a.text.strip == "Editar" }
+      expect(link["href"]).to eq(edit_product_path(product))
+      expect(link["data-turbo-frame"]).to eq("_top")
+    end
+
     it "shows a message when no product matches" do
       create(:product, name: "Queso")
 

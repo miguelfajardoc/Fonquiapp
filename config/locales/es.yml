@@ -62,6 +62,7 @@ es:
       table_zone: "Zona"
       table_route: "Ruta"
       table_actions: "Acciones"
+      edit: "Editar"
       delete: "Eliminar"
       filter_name_label: "Nombre"
       filter_name_placeholder: "Buscar por nombre"

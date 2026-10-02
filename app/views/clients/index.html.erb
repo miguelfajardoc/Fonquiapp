@@ -73,13 +73,18 @@
               <td class="px-4 py-3 text-text"><%= client.zone.name %></td>
               <td class="px-4 py-3 text-text"><%= client.routes.map(&:name).sort.join(", ") %></td>
               <td class="px-4 py-3" data-row-target="skip">
-                <button type="button"
-                        class="rounded border border-border px-3 py-1.5 text-text"
-                        data-action="modal#open"
-                        data-modal-name-param="<%= client.name %>"
-                        data-modal-url-param="<%= client_path(client) %>">
-                  <%= t(".delete") %>
-                </button>
+                <div class="flex gap-3">
+                  <%= link_to t(".edit"), edit_client_path(client),
+                        class: "rounded border border-border px-3 py-1.5 text-text",
+                        data: { turbo_frame: "_top" } %>
+                  <button type="button"
+                          class="rounded border border-border px-3 py-1.5 text-text"
+                          data-action="modal#open"
+                          data-modal-name-param="<%= client.name %>"
+                          data-modal-url-param="<%= client_path(client) %>">
+                    <%= t(".delete") %>
+                  </button>
+                </div>
               </td>
             </tr>
           <% end %>

@@ -137,6 +137,18 @@ RSpec.describe "Clients", type: :request do
       expect(cells["Sin Rutas"]).to eq("")
     end
 
+    it "gives each client row an Editar link to its edit page, outside the row click and the table frame" do
+      client = create(:client, name: "Tienda Norte", zone: zone)
+
+      get clients_path(zone_id: zone.id)
+
+      skip_cell = response.parsed_body.at_css("turbo-frame#clients tbody tr td[data-row-target='skip']")
+      link = skip_cell.css("a").find { |a| a.text.strip == "Editar" }
+      expect(link["href"]).to eq(edit_client_path(client))
+      expect(link["data-turbo-frame"]).to eq("_top")
+      expect(skip_cell.text).to include("Eliminar")
+    end
+
     it "shows a message when no client matches" do
       create(:client, name: "Tienda", zone: zone)
 
