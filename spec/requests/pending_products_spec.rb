@@ -31,9 +31,123 @@ RSpec.describe "PendingProducts", type: :request do
     it "does not render a toggle control for a canceled record" do
       record = create(:pending_product, state: :canceled)
 
-      get pending_products_path
+      get pending_products_path(state: "all")
+
+      expect(response.body).to include(record.client.name)
 
       expect(response.body).not_to include(toggle_state_pending_product_path(record, context: "table"))
+    end
+  end
+
+  describe "GET /pending_products with filters, sort, and pagination" do
+    let(:zone) { create(:zone, name: "Bosa") }
+    let(:other_zone) { create(:zone, name: "Soacha") }
+
+    def pending_for(client_name, in_zone, **attrs)
+      create(:pending_product, zone: in_zone, client: create(:client, name: client_name, zone: in_zone), **attrs)
+    end
+
+    it "has no in-page title and puts every filter, the clear link, and the create button on one row" do
+      get pending_products_path
+
+      body = response.parsed_body
+      expect(body.at_css("h1")).to be_nil
+      form = body.at_css("form[method='get'][data-turbo-frame='pending_products']")
+      %w[zone_id state sort].each { |name| expect(form.at_css("select[name='#{name}']")).not_to be_nil }
+      expect(form.at_css("input[name='client_name']")).not_to be_nil
+      expect(form.css("select[name='state'] option").map { |o| o.text.strip })
+        .to eq(["Todos los estados", "Pendiente", "Entregado", "Cancelado"])
+      expect(form.at_css("select[name='state'] option[value='all']").text.strip).to eq("Todos los estados")
+      expect(form.parent.css("> a").map { |a| a.text.strip }).to include("Crear Pendiente")
+      expect(clear_filters_link["href"]).to eq(pending_products_path)
+      expect(body.at_css("dialog")).not_to be_nil
+    end
+
+    it "shows a Zona column after Cliente" do
+      pending_for("Tienda Norte", zone)
+
+      get pending_products_path
+
+      headers = frame_headers("pending_products")
+      expect(headers[headers.index("Cliente") + 1]).to eq("Zona")
+      expect(frame_column("pending_products", 2)).to eq(["Bosa"])
+    end
+
+    it "filters by zone, client name (ignoring accents), and state, also combined" do
+      pending_for("Tienda San José", zone, state: :pending)
+      pending_for("Salsamentaria", zone, state: :delivered)
+      pending_for("Tienda Centro", other_zone, state: :pending)
+
+      get pending_products_path(client_name: "JOSE")
+      expect(frame_column("pending_products", 1)).to eq(["Tienda San José"])
+
+      get pending_products_path(zone_id: zone.id, state: "all")
+      expect(frame_column("pending_products", 1)).to contain_exactly("Tienda San José", "Salsamentaria")
+
+      get pending_products_path(state: "delivered")
+      expect(frame_column("pending_products", 1)).to eq(["Salsamentaria"])
+
+      get pending_products_path(zone_id: zone.id, state: "pending")
+      expect(frame_column("pending_products", 1)).to eq(["Tienda San José"])
+      expect(response.parsed_body.at_css("select[name='state'] option[selected]")["value"]).to eq("pending")
+    end
+
+    it "defaults the state filter to Pendiente, and state=all lists every state" do
+      pending_for("Por Entregar", zone, state: :pending)
+      pending_for("Ya Entregado", zone, state: :delivered)
+      pending_for("Cancelado", zone, state: :canceled)
+
+      get pending_products_path
+      expect(frame_column("pending_products", 1)).to eq(["Por Entregar"])
+      expect(response.parsed_body.at_css("select[name='state'] option[selected]")["value"]).to eq("pending")
+
+      get pending_products_path(state: "all")
+      expect(frame_column("pending_products", 1)).to contain_exactly("Por Entregar", "Ya Entregado", "Cancelado")
+      expect(response.parsed_body.at_css("select[name='state'] option[selected]")["value"]).to eq("all")
+    end
+
+    it "lists the most recent first by default and the oldest first with sort=oldest" do
+      pending_for("Ayer", zone, created_at: 1.day.ago)
+      pending_for("Hoy", zone, created_at: Time.current)
+
+      get pending_products_path
+      expect(frame_column("pending_products", 1)).to eq(%w[Hoy Ayer])
+
+      get pending_products_path(sort: "oldest")
+      expect(frame_column("pending_products", 1)).to eq(%w[Ayer Hoy])
+      expect(response.parsed_body.at_css("select[name='sort'] option[selected]")["value"]).to eq("oldest")
+    end
+
+    it "shows a message when no record matches" do
+      pending_for("Tienda", zone)
+
+      get pending_products_path(client_name: "zzz")
+
+      expect(frame_rows("pending_products")).to be_empty
+      expect(response.body).to include(I18n.t("pending_products.index.no_results"))
+    end
+
+    it "paginates 20 per page, keeping the state filter and sort on page links" do
+      25.times { |n| pending_for(format("Pend %02d", n), zone, state: :pending, created_at: n.minutes.ago) }
+      5.times { |n| pending_for("Entregado #{n}", zone, state: :delivered) }
+
+      get pending_products_path(state: "pending", sort: "oldest")
+
+      expect(frame_rows("pending_products").size).to eq(20)
+      expect(next_page_query("pending_products")).to include("state" => "pending", "sort" => "oldest", "page" => "2")
+
+      get pending_products_path(state: "pending", sort: "oldest", page: 2)
+
+      expect(frame_column("pending_products", 1)).to eq((0..4).to_a.reverse.map { |n| format("Pend %02d", n) })
+    end
+
+    it "shows no pagination controls when every record fits on one page" do
+      3.times { |n| pending_for("Cliente #{n}", zone) }
+
+      get pending_products_path
+
+      expect(frame_rows("pending_products").size).to eq(3)
+      expect(pagination_nav("pending_products")).to be_nil
     end
   end
 

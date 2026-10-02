@@ -1,0 +1,4 @@
+<%# Full-page visit to the unfiltered index, so every filter control is emptied too. %>
+<%= link_to t("shared.filters.clear"), path,
+      class: "flex h-11 items-center rounded border border-border px-4 text-sm text-text",
+      data: { turbo_frame: "_top" } %>

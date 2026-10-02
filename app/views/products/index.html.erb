@@ -1,44 +1,62 @@
 <% content_for :title, t(".title") %>
 
 <div class="flex w-full flex-col gap-6" data-controller="modal">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
-    <%= link_to t(".new_button"), new_product_path,
-          class: "flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast" %>
+  <div class="mt-4 flex flex-wrap items-end justify-between gap-3">
+    <%= form_with url: products_path, method: :get, class: "flex flex-wrap items-end gap-3",
+          data: { controller: "auto-submit", turbo_frame: "products" } do %>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="name"><%= t(".filter_name_label") %></label>
+        <input type="search" name="name" id="name" value="<%= @filters[:name] %>"
+               placeholder="<%= t(".filter_name_placeholder") %>" autocomplete="off"
+               data-action="input->auto-submit#debouncedSubmit" class="<%= filter_control_class %>">
+      </div>
+      <%= render "shared/clear_filters", path: products_path %>
+    <% end %>
+
+    <%= link_to t(".new_button"), new_product_path, class: create_button_class %>
   </div>
 
-  <div class="overflow-x-auto rounded border border-border bg-surface">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="border-b border-border text-text-muted">
-          <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_price") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @products.each do |product| %>
-          <tr class="border-b border-border last:border-0">
-            <td class="px-4 py-3 text-text"><%= product.name %></td>
-            <td class="px-4 py-3 text-text"><%= number_to_currency(product.price) %></td>
-            <td class="px-4 py-3">
-              <div class="flex gap-3">
-                <%= link_to t(".edit"), edit_product_path(product),
-                      class: "rounded border border-border px-3 py-1.5 text-text" %>
-                <button type="button"
-                        class="rounded border border-border px-3 py-1.5 text-text"
-                        data-action="modal#open"
-                        data-modal-name-param="<%= product.name %>"
-                        data-modal-url-param="<%= product_path(product) %>">
-                  <%= t(".delete") %>
-                </button>
-              </div>
-            </td>
+  <%= turbo_frame_tag "products", class: "flex flex-col gap-6", data: { turbo_action: "advance" } do %>
+    <div class="overflow-x-auto rounded border border-border bg-surface">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-border text-text-muted">
+            <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_price") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          <% if @products.empty? %>
+            <tr>
+              <td class="px-4 py-3 text-text-muted" colspan="3"><%= t(".no_results") %></td>
+            </tr>
+          <% end %>
+          <% @products.each do |product| %>
+            <tr class="border-b border-border last:border-0">
+              <td class="px-4 py-3 text-text"><%= product.name %></td>
+              <td class="px-4 py-3 text-text"><%= number_to_currency(product.price) %></td>
+              <td class="px-4 py-3">
+                <div class="flex gap-3">
+                  <%= link_to t(".edit"), edit_product_path(product),
+                        class: "rounded border border-border px-3 py-1.5 text-text" %>
+                  <button type="button"
+                          class="rounded border border-border px-3 py-1.5 text-text"
+                          data-action="modal#open"
+                          data-modal-name-param="<%= product.name %>"
+                          data-modal-url-param="<%= product_path(product) %>">
+                    <%= t(".delete") %>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination", pagy: @pagy %>
+  <% end %>
 
   <%= render "shared/confirm_dialog" %>
 </div>

@@ -25,6 +25,68 @@ RSpec.describe "Products", type: :request do
     end
   end
 
+  describe "GET /products with filters and pagination" do
+    it "has no in-page title and puts the filter form, clear link, and create button on one row" do
+      get products_path
+
+      body = response.parsed_body
+      expect(body.at_css("h1")).to be_nil
+      form = body.at_css("form[method='get'][data-turbo-frame='products']")
+      expect(form.at_css("input[name='name']")).not_to be_nil
+      expect(form.parent.css("> a").map { |a| a.text.strip }).to include("Crear producto")
+      expect(clear_filters_link["href"]).to eq(products_path)
+      expect(clear_filters_link["data-turbo-frame"]).to eq("_top")
+      expect(body.at_css("turbo-frame#products[data-turbo-action='advance']")).not_to be_nil
+    end
+
+    it "filters by a name fragment ignoring case and accents, and pre-fills the box" do
+      create(:product, name: "Queso Añejo")
+      create(:product, name: "Crema de leche")
+
+      get products_path(name: "ANEJO")
+
+      expect(frame_column("products", 0)).to eq(["Queso Añejo"])
+      expect(response.parsed_body.at_css("input[name='name']")["value"]).to eq("ANEJO")
+    end
+
+    it "shows a message when no product matches" do
+      create(:product, name: "Queso")
+
+      get products_path(name: "zzz")
+
+      expect(frame_rows("products")).to be_empty
+      expect(response.body).to include(I18n.t("products.index.no_results"))
+    end
+
+    context "with more products than fit on one page" do
+      before do
+        25.times { |n| create(:product, name: format("Queso %02d", n)) }
+        5.times { |n| create(:product, name: format("Crema %02d", n)) }
+      end
+
+      it "paginates 20 per page in name order, keeping the filter on page links" do
+        get products_path(name: "queso")
+
+        expect(frame_column("products", 0).first).to eq("Queso 00")
+        expect(frame_rows("products").size).to eq(20)
+        expect(next_page_query("products")).to include("name" => "queso", "page" => "2")
+
+        get products_path(name: "queso", page: 2)
+
+        expect(frame_column("products", 0)).to eq((20..24).map { |n| format("Queso %02d", n) })
+      end
+    end
+
+    it "shows no pagination controls when every product fits on one page" do
+      create_list(:product, 3)
+
+      get products_path
+
+      expect(frame_rows("products").size).to eq(3)
+      expect(pagination_nav("products")).to be_nil
+    end
+  end
+
   describe "GET /products/new" do
     it "renders the form with a Crear submit button" do
       get new_product_path

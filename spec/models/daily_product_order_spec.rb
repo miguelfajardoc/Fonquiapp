@@ -67,4 +67,17 @@ RSpec.describe DailyProductOrder, type: :model do
       expect(Product.exists?(product.id)).to be(true)
     end
   end
+
+  describe ".filter_by" do
+    it "filters by zone and by route" do
+      zone = create(:zone)
+      route = create(:route, zone: zone)
+      wanted = create(:daily_product_order, zone: zone, route: route)
+      same_zone = create(:daily_product_order, zone: zone, route: create(:route, zone: zone))
+      create(:daily_product_order)
+
+      expect(DailyProductOrder.filter_by(zone_id: zone.id)).to contain_exactly(wanted, same_zone)
+      expect(DailyProductOrder.filter_by(zone_id: zone.id, route_id: route.id)).to eq([wanted])
+    end
+  end
 end

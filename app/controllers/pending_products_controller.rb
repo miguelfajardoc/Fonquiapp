@@ -1,8 +1,19 @@
 class PendingProductsController < ApplicationController
+  FILTER_KEYS = %i[zone_id client_name state].freeze
+  # With no state chosen the list shows what still needs handling; "all" disables the state filter.
+  DEFAULT_STATE = "pending".freeze
+
   before_action :set_pending_product, only: %i[edit update destroy toggle_state]
 
   def index
-    @pending_products = PendingProduct.includes(:client, :product).order(created_at: :desc)
+    @zones = Zone.order(:name)
+    @filters = params.slice(*FILTER_KEYS).permit(*FILTER_KEYS).to_h
+    @filters[:state] = DEFAULT_STATE if @filters[:state].blank?
+    @sort = params[:sort] == "oldest" ? "oldest" : "newest"
+    direction = @sort == "oldest" ? :asc : :desc
+    scope = PendingProduct.includes(:client, :product, :zone).filter_by(@filters)
+                          .order(created_at: direction, id: direction)
+    @pagy, @pending_products = pagy(:offset, scope)
   end
 
   def new

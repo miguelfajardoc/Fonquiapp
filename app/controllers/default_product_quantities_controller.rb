@@ -1,10 +1,14 @@
 class DefaultProductQuantitiesController < ApplicationController
+  FILTER_KEYS = %i[client_name zone_id].freeze
+
   before_action :set_default_product_quantity, only: %i[edit update destroy]
 
   def index
-    @default_product_quantities = DefaultProductQuantity
-                                  .includes(:client, :product)
+    @zones = Zone.order(:name)
+    @filters = params.slice(*FILTER_KEYS).permit(*FILTER_KEYS).to_h
+    scope = DefaultProductQuantity.includes(:client, :product, :zone).filter_by(@filters)
                                   .order("clients.name", "products.name")
+    @pagy, @default_product_quantities = pagy(:offset, scope)
   end
 
   def new

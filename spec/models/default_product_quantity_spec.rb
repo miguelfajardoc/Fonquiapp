@@ -58,4 +58,38 @@ RSpec.describe DefaultProductQuantity, type: :model do
       expect(Client.exists?(client.id)).to be(true)
     end
   end
+
+  describe ".filter_by" do
+    let(:zone) { create(:zone) }
+    let(:other_zone) { create(:zone) }
+
+    def client_names(relation)
+      relation.joins(:client).order("clients.name").pluck("clients.name")
+    end
+
+    it "matches the client name ignoring case and accents" do
+      create(:default_product_quantity, zone: zone, client: create(:client, name: "Tienda San José", zone: zone))
+      create(:default_product_quantity, zone: zone, client: create(:client, name: "El Paisa", zone: zone))
+
+      expect(client_names(DefaultProductQuantity.filter_by(client_name: "jose"))).to eq(["Tienda San José"])
+    end
+
+    it "filters by zone and combines with the client name" do
+      create(:default_product_quantity, zone: zone, client: create(:client, name: "Tienda Norte", zone: zone))
+      create(:default_product_quantity, zone: zone, client: create(:client, name: "Salsamentaria", zone: zone))
+      create(:default_product_quantity, zone: other_zone,
+                                        client: create(:client, name: "Tienda Centro", zone: other_zone))
+
+      expect(client_names(DefaultProductQuantity.filter_by(zone_id: zone.id)))
+        .to eq(["Salsamentaria", "Tienda Norte"])
+      expect(client_names(DefaultProductQuantity.filter_by(client_name: "tienda", zone_id: zone.id)))
+        .to eq(["Tienda Norte"])
+    end
+
+    it "ignores blank values" do
+      create_list(:default_product_quantity, 2)
+
+      expect(DefaultProductQuantity.filter_by(client_name: "", zone_id: "").count).to eq(2)
+    end
+  end
 end

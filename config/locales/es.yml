@@ -21,6 +21,12 @@ es:
       confirm_question_suffix: "?"
       cancel: "Cancelar"
       confirm: "Eliminar"
+    filters:
+      clear: "Limpiar filtros"
+      all_zones: "Todas las zonas"
+      all_routes: "Todas las rutas"
+      zone_label: "Zona"
+      route_label: "Ruta"
   zones:
     index:
       title: "Zonas"
@@ -64,7 +70,6 @@ es:
       filter_route_label: "Ruta"
       filter_route_placeholder: "Todas las rutas"
       no_results: "No hay clientes que coincidan con los filtros."
-      clear_filters: "Limpiar filtros"
     show:
       name_label: "Nombre"
       address_label: "Dirección"
@@ -135,6 +140,9 @@ es:
       table_actions: "Acciones"
       edit: "Editar"
       delete: "Eliminar"
+      filter_name_label: "Nombre"
+      filter_name_placeholder: "Buscar por nombre"
+      no_results: "No hay productos que coincidan con los filtros."
     new:
       title: "Nuevo producto"
     edit:
@@ -157,6 +165,10 @@ es:
       title: "Default"
       new_button: "Crear default"
       table_client: "Cliente"
+      table_zone: "Zona"
+      filter_client_label: "Cliente"
+      filter_client_placeholder: "Buscar por cliente"
+      no_results: "No hay registros que coincidan con los filtros."
       table_product: "Producto"
       table_quantity: "Cantidad"
       table_actions: "Acciones"
@@ -189,10 +201,19 @@ es:
       new_button: "Crear Pendiente"
       table_date: "Fecha de creación"
       table_client: "Cliente"
+      table_zone: "Zona"
       table_product: "Producto"
       table_quantity: "Cantidad"
       table_state: "Estado"
       table_actions: "Acciones"
+      filter_client_label: "Cliente"
+      filter_client_placeholder: "Buscar por cliente"
+      filter_state_label: "Estado"
+      filter_state_placeholder: "Todos los estados"
+      sort_label: "Orden"
+      sort_newest: "Más recientes primero"
+      sort_oldest: "Más antiguos primero"
+      no_results: "No hay pendientes que coincidan con los filtros."
     new:
       title: "Crear Pendiente"
     client_panel:
@@ -244,6 +265,8 @@ es:
       table_actions: "Acción"
       download_button: "Descargar consolidado"
       no_batches: "Aún no se ha generado ninguna orden diaria."
+      no_results: "No hay órdenes diarias que coincidan con los filtros."
+      filters_heading: "Filtrar tabla"
     generate:
       missing_zone: "Selecciona una zona antes de generar."
       missing_route: "Selecciona una ruta de la zona antes de generar."

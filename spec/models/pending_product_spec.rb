@@ -70,4 +70,36 @@ RSpec.describe PendingProduct, type: :model do
       expect(Zone.exists?(zone.id)).to be(true)
     end
   end
+
+  describe ".filter_by" do
+    let(:zone) { create(:zone) }
+
+    it "matches the client name ignoring case and accents" do
+      match = create(:pending_product, zone: zone, client: create(:client, name: "Doña Rosa", zone: zone))
+      create(:pending_product, zone: zone, client: create(:client, name: "El Paisa", zone: zone))
+
+      expect(PendingProduct.filter_by(client_name: "DONA")).to eq([match])
+    end
+
+    it "filters by zone and by state, combined" do
+      wanted = create(:pending_product, zone: zone, state: :pending)
+      create(:pending_product, zone: zone, state: :delivered)
+      create(:pending_product, zone: create(:zone), state: :pending)
+
+      expect(PendingProduct.filter_by(zone_id: zone.id, state: "pending")).to eq([wanted])
+    end
+
+    it "filters by each state" do
+      %i[pending delivered canceled].each { |state| create(:pending_product, state: state) }
+
+      expect(PendingProduct.filter_by(state: "canceled").map(&:state)).to eq(["canceled"])
+    end
+
+    it "ignores an unknown state and blank values" do
+      create_list(:pending_product, 2)
+
+      expect(PendingProduct.filter_by(state: "bogus").count).to eq(2)
+      expect(PendingProduct.filter_by(state: "", zone_id: "", client_name: "").count).to eq(2)
+    end
+  end
 end

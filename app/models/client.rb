@@ -12,9 +12,7 @@ class Client < ApplicationRecord
   validates :name, presence: true
 
   # Contains match on name, ignoring case and accents; typed text is matched literally.
-  scope :filter_by_name, lambda { |name|
-    where("unaccent(clients.name) ILIKE unaccent(?)", "%#{sanitize_sql_like(name)}%")
-  }
+  scope :filter_by_name, ->(name) { where_unaccent_contains("clients.name", name) }
   scope :filter_by_zone_id, ->(zone_id) { where(zone_id: zone_id) }
   scope :filter_by_route_id, ->(route_id) { where(id: RouteStop.where(route_id: route_id).select(:client_id)) }
 

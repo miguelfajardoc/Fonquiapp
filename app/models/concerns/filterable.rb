@@ -10,5 +10,11 @@ module Filterable
         scope.public_send(:"filter_by_#{key}", value)
       end
     end
+
+    # Contains match ignoring case and accents. `column_sql` is a literal
+    # written in the model, never user input; typed text is matched literally.
+    def where_unaccent_contains(column_sql, text)
+      where("unaccent(#{column_sql}) ILIKE unaccent(?)", "%#{sanitize_sql_like(text)}%")
+    end
   end
 end

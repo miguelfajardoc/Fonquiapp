@@ -1,6 +1,7 @@
 <tr id="<%= dom_id(pending_product) %>" class="border-b border-border last:border-0">
   <td class="px-4 py-3 text-text"><%= pending_product.created_at.strftime("%d/%m/%Y") %></td>
   <td class="px-4 py-3 text-text"><%= pending_product.client.name %></td>
+  <td class="px-4 py-3 text-text"><%= pending_product.zone.name %></td>
   <td class="px-4 py-3 text-text"><%= pending_product.product.name %></td>
   <td class="px-4 py-3 text-text"><%= pending_product.quantity %></td>
   <td class="px-4 py-3"><%= render "pending_products/state_badge", pending_product: pending_product %></td>

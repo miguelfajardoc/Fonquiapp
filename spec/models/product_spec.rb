@@ -54,4 +54,22 @@ RSpec.describe Product, type: :model do
       expect(Product.exists?(product.id)).to be(true)
     end
   end
+
+  describe ".filter_by" do
+    it "matches a name fragment ignoring case and accents, with % taken literally" do
+      create(:product, name: "Queso Añejo")
+      create(:product, name: "Crema de leche")
+      create(:product, name: "Queso 100%")
+      create(:product, name: "Queso 1000")
+
+      expect(Product.filter_by(name: "ANEJO").pluck(:name)).to eq(["Queso Añejo"])
+      expect(Product.filter_by(name: "100%").pluck(:name)).to eq(["Queso 100%"])
+    end
+
+    it "ignores a blank name" do
+      create_list(:product, 2)
+
+      expect(Product.filter_by(name: "").count).to eq(2)
+    end
+  end
 end

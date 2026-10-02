@@ -1,8 +1,11 @@
 class ProductsController < ApplicationController
+  FILTER_KEYS = %i[name].freeze
+
   before_action :set_product, only: %i[edit update destroy]
 
   def index
-    @products = Product.order(:name)
+    @filters = params.slice(*FILTER_KEYS).permit(*FILTER_KEYS).to_h
+    @pagy, @products = pagy(:offset, Product.filter_by(@filters).order(:name))
   end
 
   def new

@@ -1,15 +1,12 @@
 <% content_for :title, t(".title") %>
 
-<div class="flex w-full flex-col gap-8">
-  <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
-
-  <%= form_with url: generate_daily_product_orders_path, method: :post, class: "flex items-end gap-3",
+<div class="flex w-full flex-col gap-6">
+  <%= form_with url: generate_daily_product_orders_path, method: :post, class: "mt-4 flex flex-wrap items-end gap-3",
         data: { controller: "client-zone-filter" } do %>
     <div class="flex flex-col gap-1">
       <label class="text-sm font-medium text-text" for="zone_id"><%= t(".zone_label") %></label>
       <select name="zone_id" id="zone_id" data-action="change->client-zone-filter#reload"
-              class="h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                     focus:outline-none focus:ring-2 focus:ring-accent">
+              class="<%= filter_control_class %>">
         <option value=""><%= t(".zone_placeholder") %></option>
         <% @zones.each do |zone| %>
           <option value="<%= zone.id %>" <%= "selected" if zone.id.to_s == @selected_zone_id %>><%= zone.name %></option>
@@ -20,8 +17,7 @@
       <label class="text-sm font-medium text-text" for="route_id"><%= t(".route_label") %></label>
       <%= turbo_frame_tag "route_select", data: { client_zone_filter_target: "frame" } do %>
         <select name="route_id" id="route_id"
-                class="h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                       focus:outline-none focus:ring-2 focus:ring-accent">
+                class="<%= filter_control_class %>">
           <option value=""><%= t(".route_placeholder") %></option>
           <% @routes.each do |route| %>
             <option value="<%= route.id %>"><%= route.name %></option>
@@ -35,37 +31,73 @@
     </button>
   <% end %>
 
-  <div class="overflow-x-auto rounded border border-border bg-surface">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="border-b border-border text-text-muted">
-          <th class="px-4 py-3 font-medium"><%= t(".table_day") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_route") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if @batches.empty? %>
-          <tr>
-            <td class="px-4 py-3 text-text-muted" colspan="4"><%= t(".no_batches") %></td>
-          </tr>
+  <section class="flex flex-col gap-3 rounded border border-border bg-surface p-4">
+    <h2 class="text-sm font-semibold text-text-muted"><%= t(".filters_heading") %></h2>
+    <%= form_with url: daily_product_orders_path, method: :get, class: "flex flex-wrap items-end gap-3",
+          data: { controller: "auto-submit client-zone-filter", client_zone_filter_param_value: "filter_zone_id",
+                  turbo_frame: "daily_product_orders" } do %>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="filter_zone_id"><%= t("shared.filters.zone_label") %></label>
+        <select name="filter_zone_id" id="filter_zone_id"
+                data-action="change->client-zone-filter#reload change->auto-submit#submit"
+                data-auto-submit-clear-param="filter_route_id" class="<%= filter_control_class %>">
+          <option value=""><%= t("shared.filters.all_zones") %></option>
+          <% @zones.each do |zone| %>
+            <option value="<%= zone.id %>" <%= "selected" if zone.id.to_s == @filter_zone_id %>><%= zone.name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="filter_route_id"><%= t("shared.filters.route_label") %></label>
+        <%= turbo_frame_tag "batch_route_filter", data: { client_zone_filter_target: "frame" } do %>
+          <select name="filter_route_id" id="filter_route_id" data-action="change->auto-submit#submit"
+                  class="<%= filter_control_class %>">
+            <option value=""><%= t("shared.filters.all_routes") %></option>
+            <% @filter_routes.each do |route| %>
+              <option value="<%= route.id %>" <%= "selected" if route.id.to_s == @filter_route_id %>><%= route.name %></option>
+            <% end %>
+          </select>
         <% end %>
-        <% @batches.each do |batch| %>
-          <tr class="border-b border-border last:border-0">
-            <td class="px-4 py-3 text-text"><%= batch.day.strftime("%d/%m/%Y") %></td>
-            <td class="px-4 py-3 text-text"><%= batch.zone_name %></td>
-            <td class="px-4 py-3 text-text"><%= batch.route_name %></td>
-            <td class="px-4 py-3">
-              <%= link_to t(".download_button"),
-                    consolidated_daily_product_orders_path(route_id: batch.route_id, day: batch.day.iso8601),
-                    class: "rounded border border-border px-3 py-1.5 text-text", data: { turbo: false } %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+      </div>
+      <%= render "shared/clear_filters", path: daily_product_orders_path %>
+    <% end %>
+  </section>
 
-  <%= render "shared/pagination", pagy: @pagy %>
+  <%= turbo_frame_tag "daily_product_orders", class: "flex flex-col gap-6", data: { turbo_action: "advance" } do %>
+    <div class="overflow-x-auto rounded border border-border bg-surface">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-border text-text-muted">
+            <th class="px-4 py-3 font-medium"><%= t(".table_day") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_route") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @batches.empty? %>
+            <tr>
+              <td class="px-4 py-3 text-text-muted" colspan="4">
+                <%= @table_filters.compact.any? ? t(".no_results") : t(".no_batches") %>
+              </td>
+            </tr>
+          <% end %>
+          <% @batches.each do |batch| %>
+            <tr class="border-b border-border last:border-0">
+              <td class="px-4 py-3 text-text"><%= batch.day.strftime("%d/%m/%Y") %></td>
+              <td class="px-4 py-3 text-text"><%= batch.zone_name %></td>
+              <td class="px-4 py-3 text-text"><%= batch.route_name %></td>
+              <td class="px-4 py-3">
+                <%= link_to t(".download_button"),
+                      consolidated_daily_product_orders_path(route_id: batch.route_id, day: batch.day.iso8601),
+                      class: "rounded border border-border px-3 py-1.5 text-text", data: { turbo: false } %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination", pagy: @pagy %>
+  <% end %>
 </div>

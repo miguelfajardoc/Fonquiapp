@@ -1,29 +1,73 @@
 <% content_for :title, t(".title") %>
 
 <div class="flex w-full flex-col gap-6" data-controller="modal pending-product-edit-modal">
-  <div class="flex items-center justify-between">
-    <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
-    <%= link_to t(".new_button"), new_pending_product_path,
-          class: "flex h-11 items-center rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast" %>
+  <div class="mt-4 flex flex-wrap items-end justify-between gap-3">
+    <%= form_with url: pending_products_path, method: :get, class: "flex flex-wrap items-end gap-3",
+          data: { controller: "auto-submit", turbo_frame: "pending_products" } do %>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="zone_id"><%= t("shared.filters.zone_label") %></label>
+        <select name="zone_id" id="zone_id" data-action="change->auto-submit#submit" class="<%= filter_control_class %>">
+          <option value=""><%= t("shared.filters.all_zones") %></option>
+          <% @zones.each do |zone| %>
+            <option value="<%= zone.id %>" <%= "selected" if zone.id.to_s == @filters[:zone_id] %>><%= zone.name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="client_name"><%= t(".filter_client_label") %></label>
+        <input type="search" name="client_name" id="client_name" value="<%= @filters[:client_name] %>"
+               placeholder="<%= t(".filter_client_placeholder") %>" autocomplete="off"
+               data-action="input->auto-submit#debouncedSubmit" class="<%= filter_control_class %>">
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="state"><%= t(".filter_state_label") %></label>
+        <select name="state" id="state" data-action="change->auto-submit#submit" class="<%= filter_control_class %>">
+          <option value="all" <%= "selected" if @filters[:state] == "all" %>><%= t(".filter_state_placeholder") %></option>
+          <% PendingProduct.states.each_key do |state| %>
+            <option value="<%= state %>" <%= "selected" if state == @filters[:state] %>><%= t("pending_products.states.#{state}") %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="sort"><%= t(".sort_label") %></label>
+        <select name="sort" id="sort" data-action="change->auto-submit#submit" class="<%= filter_control_class %>">
+          <option value="newest"><%= t(".sort_newest") %></option>
+          <option value="oldest" <%= "selected" if @sort == "oldest" %>><%= t(".sort_oldest") %></option>
+        </select>
+      </div>
+      <%= render "shared/clear_filters", path: pending_products_path %>
+    <% end %>
+
+    <%= link_to t(".new_button"), new_pending_product_path, class: create_button_class %>
   </div>
 
-  <div class="overflow-x-auto rounded border border-border bg-surface">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="border-b border-border text-text-muted">
-          <th class="px-4 py-3 font-medium"><%= t(".table_date") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_client") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_product") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_quantity") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_state") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <%= render partial: "pending_products/row", collection: @pending_products, as: :pending_product %>
-      </tbody>
-    </table>
-  </div>
+  <%= turbo_frame_tag "pending_products", class: "flex flex-col gap-6", data: { turbo_action: "advance" } do %>
+    <div class="overflow-x-auto rounded border border-border bg-surface">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-border text-text-muted">
+            <th class="px-4 py-3 font-medium"><%= t(".table_date") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_client") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_product") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_quantity") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_state") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @pending_products.empty? %>
+            <tr>
+              <td class="px-4 py-3 text-text-muted" colspan="7"><%= t(".no_results") %></td>
+            </tr>
+          <% end %>
+          <%= render partial: "pending_products/row", collection: @pending_products, as: :pending_product %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination", pagy: @pagy %>
+  <% end %>
 
   <%= render "shared/confirm_dialog" %>
   <%= render "shared/pending_product_edit_modal" %>

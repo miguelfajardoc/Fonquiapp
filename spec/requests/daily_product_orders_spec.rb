@@ -5,10 +5,6 @@ RSpec.describe "DailyProductOrders", type: :request do
     response.parsed_body.css("tbody tr").reject { |row| row.at_css("td[colspan]") }
   end
 
-  def pagination_nav
-    response.parsed_body.at_css("nav.pagy")
-  end
-
   describe "GET /daily_product_orders" do
     it "renders the zone and route filters with a Generar button and lists one row per day+route" do
       zone = create(:zone, name: "Zona Norte")
@@ -72,8 +68,9 @@ RSpec.describe "DailyProductOrders", type: :request do
     end
 
     it "lists batches newest first" do
-      create(:daily_product_order, route: create(:route, name: "Ruta Ayer"), day: Date.current - 1)
       create(:daily_product_order, route: create(:route, name: "Ruta Hoy"), day: Date.current)
+      create(:daily_product_order, route: create(:route, name: "Ruta Ayer"), day: Date.current - 1,
+                                   created_at: 1.day.ago)
 
       get daily_product_orders_path
 
@@ -83,7 +80,9 @@ RSpec.describe "DailyProductOrders", type: :request do
     context "with more batches than fit on one page" do
       before do
         route = create(:route)
-        25.times { |n| create(:daily_product_order, route: route, zone: route.zone, day: Date.current - n) }
+        25.times do |n|
+          create(:daily_product_order, route: route, zone: route.zone, day: Date.current - n, created_at: n.days.ago)
+        end
       end
 
       it "shows the 20 most recent batches with pagination controls" do
@@ -91,7 +90,7 @@ RSpec.describe "DailyProductOrders", type: :request do
 
         expect(batch_rows.size).to eq(20)
         expect(batch_rows.first.css("td")[0].text.strip).to eq(Date.current.strftime("%d/%m/%Y"))
-        expect(pagination_nav).not_to be_nil
+        expect(pagination_nav("daily_product_orders")).not_to be_nil
       end
 
       it "shows the remaining batches on the next page" do
@@ -104,12 +103,123 @@ RSpec.describe "DailyProductOrders", type: :request do
 
     it "shows no pagination controls when every batch fits on one page" do
       route = create(:route)
-      3.times { |n| create(:daily_product_order, route: route, zone: route.zone, day: Date.current - n) }
+      3.times do |n|
+        create(:daily_product_order, route: route, zone: route.zone, day: Date.current - n, created_at: n.days.ago)
+      end
 
       get daily_product_orders_path
 
       expect(batch_rows.size).to eq(3)
-      expect(pagination_nav).to be_nil
+      expect(pagination_nav("daily_product_orders")).to be_nil
+    end
+  end
+
+  describe "GET /daily_product_orders ordering and table filters" do
+    let(:bosa) { create(:zone, name: "Bosa") }
+    let(:soacha) { create(:zone, name: "Soacha") }
+
+    def generate(route)
+      client = create(:client, zone: route.zone)
+      create(:route_stop, route: route, client: client)
+      create(:default_product_quantity, zone: route.zone, client: client, quantity: 2)
+      DailyProductOrderGeneration.new(route: route).call
+    end
+
+    def listed_routes
+      frame_column("daily_product_orders", 2)
+    end
+
+    it "has no in-page title and a separate table filter section below the generation form" do
+      get daily_product_orders_path
+
+      body = response.parsed_body
+      expect(body.at_css("h1")).to be_nil
+      section = body.at_css("section")
+      expect(section.at_css("h2").text.strip).to eq("Filtrar tabla")
+      form = section.at_css("form[method='get'][data-turbo-frame='daily_product_orders']")
+      expect(form["data-client-zone-filter-param-value"]).to eq("filter_zone_id")
+      expect(form.at_css("select[name='filter_zone_id']")).not_to be_nil
+      expect(form.at_css("turbo-frame#batch_route_filter select[name='filter_route_id']")).not_to be_nil
+      expect(clear_filters_link["href"]).to eq(daily_product_orders_path)
+      expect(body.at_css("turbo-frame#daily_product_orders[data-turbo-action='advance']")).not_to be_nil
+    end
+
+    it "lists a just-generated batch first within the same day, and a regenerated one moves to the top" do
+      ruta_a = create(:route, zone: bosa, name: "Ruta A")
+      ruta_z = create(:route, zone: soacha, name: "Ruta Z")
+      generate(ruta_a)
+      DailyProductOrder.where(route: ruta_a).find_each { |order| order.update!(created_at: 1.hour.ago) }
+      generate(ruta_z)
+
+      get daily_product_orders_path
+      expect(listed_routes).to eq(["Ruta Z", "Ruta A"])
+
+      DailyProductOrderGeneration.new(route: ruta_a).call
+      DailyProductOrder.where(route: ruta_a).find_each { |order| order.update!(created_at: 1.minute.from_now) }
+
+      get daily_product_orders_path
+      expect(listed_routes).to eq(["Ruta A", "Ruta Z"])
+    end
+
+    it "filters the table by zone and by route, ignoring a route from another zone" do
+      ruta1 = create(:route, zone: bosa, name: "Ruta 1")
+      ruta2 = create(:route, zone: bosa, name: "Ruta 2")
+      ruta3 = create(:route, zone: soacha, name: "Ruta 3")
+      [ruta1, ruta2, ruta3].each { |route| create(:daily_product_order, route: route, zone: route.zone) }
+
+      get daily_product_orders_path(filter_zone_id: bosa.id)
+      expect(listed_routes).to contain_exactly("Ruta 1", "Ruta 2")
+
+      get daily_product_orders_path(filter_zone_id: bosa.id, filter_route_id: ruta1.id)
+      expect(listed_routes).to eq(["Ruta 1"])
+
+      get daily_product_orders_path(filter_zone_id: bosa.id, filter_route_id: ruta3.id)
+      expect(listed_routes).to contain_exactly("Ruta 1", "Ruta 2")
+    end
+
+    it "keeps the table filter route choices and the generation route choices independent" do
+      create(:route, zone: bosa, name: "Ruta Bosa")
+      create(:route, zone: soacha, name: "Ruta Soacha")
+
+      get daily_product_orders_path(zone_id: soacha.id, filter_zone_id: bosa.id)
+
+      body = response.parsed_body
+      table_routes = body.css("turbo-frame#batch_route_filter option").map { |o| o.text.strip }
+      generation_routes = body.css("turbo-frame#route_select option").map { |o| o.text.strip }
+      expect(table_routes).to eq(["Todas las rutas", "Ruta Bosa"])
+      expect(generation_routes).to eq(["Selecciona una ruta", "Ruta Soacha"])
+      expect(body.at_css("select[name='zone_id'] option[selected]")["value"]).to eq(soacha.id.to_s)
+      expect(body.at_css("select[name='filter_zone_id'] option[selected]")["value"]).to eq(bosa.id.to_s)
+    end
+
+    it "offers no table routes until a table zone is selected" do
+      create(:route, zone: bosa, name: "Ruta Bosa")
+
+      get daily_product_orders_path
+
+      expect(response.parsed_body.css("turbo-frame#batch_route_filter option").map { |o| o.text.strip })
+        .to eq(["Todas las rutas"])
+    end
+
+    it "shows a no-results message when the filters match no batch" do
+      create(:daily_product_order, route: create(:route, zone: bosa), zone: bosa)
+
+      get daily_product_orders_path(filter_zone_id: soacha.id)
+
+      expect(frame_rows("daily_product_orders")).to be_empty
+      expect(response.body).to include(I18n.t("daily_product_orders.index.no_results"))
+    end
+
+    it "keeps the table filters on page links" do
+      route = create(:route, zone: bosa)
+      25.times do |n|
+        create(:daily_product_order, route: route, zone: bosa, day: Date.current - n, created_at: n.days.ago)
+      end
+
+      get daily_product_orders_path(filter_zone_id: bosa.id)
+
+      expect(next_page_query("daily_product_orders"))
+        .to include("filter_zone_id" => bosa.id.to_s, "page" => "2")
     end
   end
 
