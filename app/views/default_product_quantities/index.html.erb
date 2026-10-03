@@ -1,6 +1,6 @@
 <% content_for :title, t(".title") %>
 
-<div class="flex w-full flex-col gap-6" data-controller="modal">
+<div class="flex w-full flex-col gap-6" data-controller="modal edit-modal">
   <div class="mt-4 flex flex-wrap items-end justify-between gap-3">
     <%= form_with url: default_product_quantities_path, method: :get, class: "flex flex-wrap items-end gap-3",
           data: { controller: "auto-submit", turbo_frame: "default_product_quantities" } do %>
@@ -43,28 +43,8 @@
               <td class="px-4 py-3 text-text-muted" colspan="5"><%= t(".no_results") %></td>
             </tr>
           <% end %>
-          <% @default_product_quantities.each do |default_product_quantity| %>
-            <tr class="border-b border-border last:border-0">
-              <td class="px-4 py-3 text-text"><%= default_product_quantity.client.name %></td>
-              <td class="px-4 py-3 text-text"><%= default_product_quantity.zone.name %></td>
-              <td class="px-4 py-3 text-text"><%= default_product_quantity.product.name %></td>
-              <td class="px-4 py-3 text-text"><%= default_product_quantity.quantity %></td>
-              <td class="px-4 py-3">
-                <div class="flex gap-3">
-                  <%= link_to t(".edit"), edit_default_product_quantity_path(default_product_quantity),
-                        class: "rounded border border-border px-3 py-1.5 text-text",
-                        data: { turbo_frame: "_top" } %>
-                  <button type="button"
-                          class="rounded border border-border px-3 py-1.5 text-text"
-                          data-action="modal#open"
-                          data-modal-name-param="<%= "#{default_product_quantity.client.name} / #{default_product_quantity.product.name}" %>"
-                          data-modal-url-param="<%= default_product_quantity_path(default_product_quantity) %>">
-                    <%= t(".delete") %>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          <% end %>
+          <%= render partial: "default_product_quantities/row", collection: @default_product_quantities,
+                     as: :default_product_quantity %>
         </tbody>
       </table>
     </div>
@@ -73,4 +53,5 @@
   <% end %>
 
   <%= render "shared/confirm_dialog" %>
+  <%= render "shared/edit_modal", frame_id: "default_product_quantity_edit_modal" %>
 </div>

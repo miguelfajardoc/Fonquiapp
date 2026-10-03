@@ -1,0 +1,13 @@
+<div id="<%= dom_id(client, :default_product_quantities) %>" class="mt-4 flex flex-col">
+  <% if default_product_quantities.any? %>
+    <div class="grid grid-cols-3 gap-2 border-b border-border pb-2 text-xs font-medium text-text-muted">
+      <span><%= t("default_product_quantities.client_panel.col_product") %></span>
+      <span><%= t("default_product_quantities.client_panel.col_quantity") %></span>
+      <span><%= t("default_product_quantities.client_panel.col_actions") %></span>
+    </div>
+    <%= render partial: "default_product_quantities/panel_item", collection: default_product_quantities,
+               as: :default_product_quantity %>
+  <% else %>
+    <p class="mt-2 text-sm text-text-muted"><%= t("default_product_quantities.client_panel.empty") %></p>
+  <% end %>
+</div>

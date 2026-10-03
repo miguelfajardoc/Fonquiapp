@@ -23,6 +23,11 @@ module FilteredIndexHelpers
     Rack::Utils.parse_query(URI.parse(link["href"]).query)
   end
 
+  # Turbo Stream responses are not parsed by `response.parsed_body`; parse them as an HTML fragment.
+  def stream_body
+    Nokogiri::HTML5.fragment(response.body)
+  end
+
   def clear_filters_link
     response.parsed_body.css("a").find { |a| a.text.strip == I18n.t("shared.filters.clear") }
   end

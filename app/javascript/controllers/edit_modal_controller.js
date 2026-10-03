@@ -1,8 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Drives a single edit-form <dialog> shared by every row on the page.
+// Drives a single edit-form <dialog> shared by every row on the page (used by
+// pending products and default product quantities).
 // "open" points the inner Turbo Frame at the record's edit URL and shows
-// the dialog; the frame's own response (rendered by PendingProductsController)
+// the dialog; the frame's own response (rendered by the resource controller's edit action)
 // fills it in. A successful submit inside the frame closes the dialog —
 // the row itself is updated separately, by that same response's turbo_stream.
 export default class extends Controller {

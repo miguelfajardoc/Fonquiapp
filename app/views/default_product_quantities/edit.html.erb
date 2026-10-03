@@ -1,6 +1,53 @@
-<% content_for :title, t(".title") %>
+<%= turbo_frame_tag "default_product_quantity_edit_modal" do %>
+  <div class="flex flex-col gap-4">
+    <h2 class="text-lg font-semibold text-text"><%= t(".title") %></h2>
 
-<div class="flex flex-col gap-6">
-  <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
-  <%= render "form", default_product_quantity: @default_product_quantity %>
-</div>
+    <%= form_with model: @default_product_quantity,
+          url: default_product_quantity_path(@default_product_quantity, context: params[:context]),
+          class: "flex flex-col gap-4" do |form| %>
+      <% if @default_product_quantity.errors.any? %>
+        <div class="rounded border border-accent bg-surface-2 px-4 py-3 text-sm text-text">
+          <p class="font-semibold">
+            <%= t("default_product_quantities.form.errors_summary", count: @default_product_quantity.errors.count) %>
+          </p>
+          <ul class="list-disc pl-5">
+            <% @default_product_quantity.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <dt class="font-medium text-text-muted"><%= t("default_product_quantities.form.zone_label") %></dt>
+        <dd class="text-text"><%= @default_product_quantity.zone.name %></dd>
+        <dt class="font-medium text-text-muted"><%= t("default_product_quantities.form.client_label") %></dt>
+        <dd class="text-text"><%= @default_product_quantity.client.name %></dd>
+      </dl>
+
+      <div class="flex flex-col gap-1">
+        <%= form.label :product_id, t("default_product_quantities.form.product_label"),
+              class: "text-sm font-medium text-text" %>
+        <%= form.select :product_id,
+              options_from_collection_for_select(Product.order(:name), :id, :name, @default_product_quantity.product_id),
+              { include_blank: t("default_product_quantities.form.product_placeholder") },
+              { class: filter_control_class } %>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <%= form.label :quantity, t("default_product_quantities.form.quantity_label"),
+              class: "text-sm font-medium text-text" %>
+        <%= form.number_field :quantity, min: 0, class: filter_control_class %>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <button type="button" data-action="edit-modal#close"
+                class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text">
+          <%= t("default_product_quantities.form.cancel") %>
+        </button>
+        <%= form.submit t("default_product_quantities.form.submit_update"),
+              class: "h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+<% end %>

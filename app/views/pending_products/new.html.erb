@@ -1,19 +1,19 @@
 <% content_for :title, t(".title") %>
 
-<div class="flex w-full flex-col gap-8" data-controller="modal pending-product-edit-modal">
+<div class="flex w-full flex-col gap-8" data-controller="modal edit-modal">
   <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
 
   <div class="flex flex-col gap-8"
-       data-controller="pending-product-client-filter"
-       data-action="hw-combobox:selection->pending-product-client-filter#reload hw-combobox:removal->pending-product-client-filter#reload">
+       data-controller="client-panel-filter"
+       data-action="hw-combobox:selection->client-panel-filter#reload hw-combobox:removal->client-panel-filter#reload">
     <%= render "form", pending_product: @pending_product %>
 
     <%= turbo_frame_tag "pending_product_client_panel", class: "block",
-          data: { pending_product_client_filter_target: "frame" } do %>
+          data: { client_panel_filter_target: "frame" } do %>
       <%= render "client_panel", selected_client: @selected_client, client_pending_products: @client_pending_products %>
     <% end %>
   </div>
 
   <%= render "shared/confirm_dialog" %>
-  <%= render "shared/pending_product_edit_modal" %>
+  <%= render "shared/edit_modal", frame_id: "pending_product_edit_modal" %>
 </div>

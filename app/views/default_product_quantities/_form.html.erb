@@ -1,4 +1,5 @@
-<%= form_with model: default_product_quantity, class: "flex flex-col gap-4 max-w-md",
+<%= form_with model: default_product_quantity, url: default_product_quantities_path, method: :post,
+      id: "default_product_quantity_form", class: "flex flex-col gap-4 max-w-md",
       data: { controller: "client-zone-filter" } do |form| %>
   <% if default_product_quantity.errors.any? %>
     <div class="rounded border border-accent bg-surface-2 px-4 py-3 text-sm text-text">
@@ -16,7 +17,7 @@
     <%= form.select :zone_id,
           options_from_collection_for_select(Zone.order(:name), :id, :name, default_product_quantity.zone_id),
           { include_blank: t(".zone_placeholder") },
-          { data: { action: "change->client-zone-filter#reload" },
+          { data: { action: "change->client-zone-filter#reload change->client-panel-filter#reload" },
             class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
                      focus:outline-none focus:ring-2 focus:ring-accent" } %>
   </div>
@@ -51,7 +52,7 @@
   <div class="flex justify-end gap-3">
     <%= link_to t(".cancel"), default_product_quantities_path,
           class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
-    <%= form.submit(default_product_quantity.persisted? ? t(".submit_update") : t(".submit_create"),
+    <%= form.submit(t(".submit_create"),
           class: "h-11 rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer") %>
   </div>
 <% end %>

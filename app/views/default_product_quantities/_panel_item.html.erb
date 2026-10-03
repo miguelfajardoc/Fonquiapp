@@ -1,0 +1,7 @@
+<div id="<%= dom_id(default_product_quantity) %>" class="grid grid-cols-3 items-center gap-2 border-b border-border py-2 text-sm last:border-0">
+  <span class="text-text"><%= default_product_quantity.product.name %></span>
+  <span class="text-text"><%= default_product_quantity.quantity %></span>
+  <span>
+    <%= render "default_product_quantities/actions", default_product_quantity: default_product_quantity, context: "panel" %>
+  </span>
+</div>

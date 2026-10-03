@@ -1,6 +1,19 @@
 <% content_for :title, t(".title") %>
 
-<div class="flex flex-col gap-6">
+<div class="flex w-full flex-col gap-8" data-controller="modal edit-modal">
   <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
-  <%= render "form", default_product_quantity: @default_product_quantity %>
+
+  <div class="flex flex-col gap-8"
+       data-controller="client-panel-filter"
+       data-action="hw-combobox:selection->client-panel-filter#reload hw-combobox:removal->client-panel-filter#reload">
+    <%= render "form", default_product_quantity: @default_product_quantity %>
+
+    <%= turbo_frame_tag "default_product_quantity_client_panel", class: "block",
+          data: { client_panel_filter_target: "frame" } do %>
+      <%= render "client_panel", selected_client: @selected_client, client_defaults: @client_defaults %>
+    <% end %>
+  </div>
+
+  <%= render "shared/confirm_dialog" %>
+  <%= render "shared/edit_modal", frame_id: "default_product_quantity_edit_modal" %>
 </div>

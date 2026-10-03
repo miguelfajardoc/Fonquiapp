@@ -19,13 +19,14 @@ RSpec.describe "DefaultProductQuantities", type: :request do
       expect(response.body).to include("Eliminar")
     end
 
-    it "renders exactly one confirmation dialog regardless of record count" do
+    it "renders exactly one confirmation dialog and one edit modal regardless of record count" do
       create_list(:default_product_quantity, 3)
 
       get default_product_quantities_path
 
-      expect(response.body.scan("<dialog").count).to eq(1)
+      expect(response.body.scan("<dialog").count).to eq(2)
       expect(response.body).to include("¿Estás seguro")
+      expect(response.parsed_body.at_css("dialog turbo-frame#default_product_quantity_edit_modal")).not_to be_nil
     end
   end
 
@@ -78,14 +79,17 @@ RSpec.describe "DefaultProductQuantities", type: :request do
       expect(body.at_css("select[name='zone_id'] option[selected]")["value"]).to eq(zone.id.to_s)
     end
 
-    it "makes each row's Editar link open the edit page outside the table frame" do
+    it "renders each row with its dom id and an Editar button that opens the edit modal" do
       record = default_for("Tienda Norte", zone)
 
       get default_product_quantities_path(zone_id: zone.id)
 
-      link = response.parsed_body.css("turbo-frame#default_product_quantities a").find { |a| a.text.strip == "Editar" }
-      expect(link["href"]).to eq(edit_default_product_quantity_path(record))
-      expect(link["data-turbo-frame"]).to eq("_top")
+      frame = response.parsed_body.at_css("turbo-frame#default_product_quantities")
+      row = frame.at_css("tr#default_product_quantity_#{record.id}")
+      button = row.css("button").find { |b| b.text.strip == "Editar" }
+      expect(button["data-action"]).to eq("edit-modal#open")
+      expect(button["data-edit-modal-url-param"]).to eq(edit_default_product_quantity_path(record, context: "table"))
+      expect(response.parsed_body.at_css("[data-controller~='edit-modal']")).not_to be_nil
     end
 
     it "shows a message when no record matches" do
@@ -122,24 +126,70 @@ RSpec.describe "DefaultProductQuantities", type: :request do
   end
 
   describe "GET /default_product_quantities/new" do
-    it "renders the form with a Crear submit button" do
+    let(:zone) { create(:zone) }
+    let(:client) { create(:client, zone: zone, name: "Tienda Norte") }
+
+    def panel
+      response.parsed_body.at_css("turbo-frame#default_product_quantity_client_panel")
+    end
+
+    it "renders the create form and a choose-a-client prompt when no client is chosen" do
       get new_default_product_quantity_path
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include('value="Crear"')
-      expect(response.body).not_to include('value="Actualizar"')
+      form = response.parsed_body.at_css("form#default_product_quantity_form")
+      expect(form.at_css("input[type=submit]")["value"]).to eq("Crear")
+      expect(form.at_css("select[name='default_product_quantity[zone_id]']")["data-action"])
+        .to include("client-panel-filter#reload")
+      expect(panel.text).to include(I18n.t("default_product_quantities.client_panel.choose_client"))
+    end
+
+    it "lists the chosen client's defaults by product, with edit and delete controls, excluding other clients" do
+      queso = create(:default_product_quantity, zone: zone, client: client, quantity: 5,
+                                                product: create(:product, name: "Queso"))
+      create(:default_product_quantity, zone: zone, client: client, quantity: 2,
+                                        product: create(:product, name: "Crema"))
+      create(:default_product_quantity, zone: zone, product: create(:product, name: "Suero"),
+                                        client: create(:client, zone: zone))
+
+      get new_default_product_quantity_path(client_id: client.id)
+
+      expect(panel.at_css("h2").text).to include("Tienda Norte")
+      items = panel.css("[id^='default_product_quantity_']").map do |item|
+        item.css("span").map do |s|
+          s.text.strip
+        end.first(2)
+      end
+      expect(items).to eq([%w[Crema 2], %w[Queso 5]])
+      item = panel.at_css("#default_product_quantity_#{queso.id}")
+      edit = item.css("button").find { |b| b.text.strip == "Editar" }
+      expect(edit["data-edit-modal-url-param"]).to eq(edit_default_product_quantity_path(queso, context: "panel"))
+      expect(item.text).to include("Eliminar")
+      expect(panel.text).not_to include("Suero")
+    end
+
+    it "says so when the chosen client has no defaults" do
+      get new_default_product_quantity_path(client_id: client.id)
+
+      expect(panel.text).to include(I18n.t("default_product_quantities.client_panel.empty"))
     end
   end
 
   describe "GET /default_product_quantities/:id/edit" do
-    it "renders the form with an Actualizar submit button" do
-      record = create(:default_product_quantity)
+    it "renders the modal frame with fixed zone and client and only product and quantity fields" do
+      record = create(:default_product_quantity, quantity: 4)
 
-      get edit_default_product_quantity_path(record)
+      get edit_default_product_quantity_path(record, context: "panel")
 
       expect(response).to have_http_status(:ok)
-      expect(response.body).to include('value="Actualizar"')
-      expect(response.body).not_to include('value="Crear"')
+      frame = response.parsed_body.at_css("turbo-frame#default_product_quantity_edit_modal")
+      expect(frame.text).to include(record.zone.name, record.client.name)
+      fields = frame.css("input, select").filter_map { |field| field["name"] }
+      expect(fields).to include("default_product_quantity[product_id]", "default_product_quantity[quantity]")
+      expect(fields).not_to include("default_product_quantity[zone_id]", "default_product_quantity[client_id]")
+      expect(frame.at_css("form")["action"]).to eq(default_product_quantity_path(record, context: "panel"))
+      expect(frame.at_css("input[type=submit]")["value"]).to eq("Actualizar")
+      expect(response.body).not_to include("<html")
     end
   end
 
@@ -170,44 +220,53 @@ RSpec.describe "DefaultProductQuantities", type: :request do
   end
 
   describe "POST /default_product_quantities" do
-    it "creates a record with a valid, unused combination" do
-      zone = create(:zone)
-      client = create(:client, zone: zone)
-      product = create(:product)
+    let(:zone) { create(:zone) }
+    let(:client) { create(:client, zone: zone) }
 
-      expect do
-        post default_product_quantities_path, params: {
-          default_product_quantity: { zone_id: zone.id, client_id: client.id, product_id: product.id, quantity: 5 }
-        }
-      end.to change(DefaultProductQuantity, :count).by(1)
-
-      expect(response).to redirect_to(default_product_quantities_path)
+    def post_default(attrs)
+      post default_product_quantities_path, params: { default_product_quantity: attrs }, as: :turbo_stream
     end
 
-    it "re-renders the form for a combination that already has a default" do
+    it "creates the record, refreshes the client's list, and resets the form keeping zone and client" do
+      product = create(:product, name: "Queso")
+
+      expect do
+        post_default(zone_id: zone.id, client_id: client.id, product_id: product.id, quantity: 5)
+      end.to change(DefaultProductQuantity, :count).by(1)
+
+      expect(response.media_type).to eq(Mime[:turbo_stream].to_s)
+      body = stream_body
+      list_id = ActionView::RecordIdentifier.dom_id(client, :default_product_quantities)
+      list = body.at_css("turbo-stream[action='replace'][target='#{list_id}']")
+      expect(list.at_css("template").inner_html).to include("Queso")
+      form = body.at_css("turbo-stream[action='replace'][target='default_product_quantity_form'] template")
+      zone_option = form.at_css("select[name='default_product_quantity[zone_id]'] option[selected]")
+      expect(zone_option["value"]).to eq(zone.id.to_s)
+      expect(form.at_css("input[name='default_product_quantity[client_id]']")["value"]).to eq(client.id.to_s)
+      expect(form.at_css("input[name='default_product_quantity[quantity]']")["value"]).to be_nil
+    end
+
+    it "creates several records for the same client in a row" do
+      2.times { |n| post_default(zone_id: zone.id, client_id: client.id, product_id: create(:product).id, quantity: n) }
+
+      expect(client.default_product_quantities.count).to eq(2)
+    end
+
+    it "re-renders the form with an error for a combination that already has a default" do
       existing = create(:default_product_quantity)
 
       expect do
-        post default_product_quantities_path, params: {
-          default_product_quantity: {
-            zone_id: existing.zone_id, client_id: existing.client_id,
-            product_id: existing.product_id, quantity: 3
-          }
-        }
+        post_default(zone_id: existing.zone_id, client_id: existing.client_id, product_id: existing.product_id,
+                     quantity: 3)
       end.not_to change(DefaultProductQuantity, :count)
 
       expect(response).to have_http_status(:unprocessable_content)
+      expect(stream_body.at_css("turbo-stream[target='default_product_quantity_form']")).not_to be_nil
     end
 
     it "re-renders the form with a negative quantity" do
-      zone = create(:zone)
-      client = create(:client, zone: zone)
-      product = create(:product)
-
       expect do
-        post default_product_quantities_path, params: {
-          default_product_quantity: { zone_id: zone.id, client_id: client.id, product_id: product.id, quantity: -1 }
-        }
+        post_default(zone_id: zone.id, client_id: client.id, product_id: create(:product).id, quantity: -1)
       end.not_to change(DefaultProductQuantity, :count)
 
       expect(response).to have_http_status(:unprocessable_content)
@@ -215,39 +274,72 @@ RSpec.describe "DefaultProductQuantities", type: :request do
   end
 
   describe "PATCH /default_product_quantities/:id" do
-    it "updates a record with a valid quantity" do
+    it "updates product and quantity and streams the table row" do
       record = create(:default_product_quantity, quantity: 2)
+      product = create(:product, name: "Mantequilla")
 
-      patch default_product_quantity_path(record), params: {
-        default_product_quantity: { quantity: 9 }
-      }
+      patch default_product_quantity_path(record, context: "table"),
+            params: { default_product_quantity: { product_id: product.id, quantity: 9 } }, as: :turbo_stream
 
-      expect(response).to redirect_to(default_product_quantities_path)
-      expect(record.reload.quantity).to eq(9)
+      expect(record.reload).to have_attributes(quantity: 9, product_id: product.id)
+      stream = stream_body.at_css("turbo-stream[action='replace'][target='default_product_quantity_#{record.id}']")
+      expect(stream.at_css("template tr")).not_to be_nil
+      expect(stream.text).to include("Mantequilla")
     end
 
-    it "does not update into a combination already used by another record" do
-      other = create(:default_product_quantity)
-      record = create(:default_product_quantity, quantity: 1)
+    it "streams the panel item when edited from the panel" do
+      record = create(:default_product_quantity, quantity: 2)
+
+      patch default_product_quantity_path(record, context: "panel"),
+            params: { default_product_quantity: { quantity: 3 } }, as: :turbo_stream
+
+      stream = stream_body.at_css("turbo-stream[target='default_product_quantity_#{record.id}'] template")
+      expect(stream.at_css("tr")).to be_nil
+      expect(stream.at_css("div#default_product_quantity_#{record.id}")).not_to be_nil
+    end
+
+    it "ignores attempts to change zone or client" do
+      record = create(:default_product_quantity)
+      other_zone = create(:zone)
+      other_client = create(:client, zone: other_zone)
 
       patch default_product_quantity_path(record), params: {
-        default_product_quantity: {
-          zone_id: other.zone_id, client_id: other.client_id, product_id: other.product_id
-        }
-      }
+        default_product_quantity: { zone_id: other_zone.id, client_id: other_client.id, quantity: 4 }
+      }, as: :turbo_stream
+
+      expect(record.reload).to have_attributes(zone_id: record.zone_id, client_id: record.client_id, quantity: 4)
+    end
+
+    it "keeps the modal open with an error when the product is already used by the same client" do
+      record = create(:default_product_quantity, quantity: 1)
+      other = create(:default_product_quantity, zone: record.zone, client: record.client)
+
+      patch default_product_quantity_path(record), params: {
+        default_product_quantity: { product_id: other.product_id }
+      }, as: :turbo_stream
 
       expect(response).to have_http_status(:unprocessable_content)
-      expect(record.reload.quantity).to eq(1)
+      expect(stream_body.at_css("turbo-frame#default_product_quantity_edit_modal")).not_to be_nil
+      expect(record.reload.product_id).not_to eq(other.product_id)
     end
   end
 
   describe "DELETE /default_product_quantities/:id" do
-    it "deletes the record" do
+    it "removes the record's row with a turbo stream" do
       record = create(:default_product_quantity)
 
       expect do
-        delete default_product_quantity_path(record)
+        delete default_product_quantity_path(record), as: :turbo_stream
       end.to change(DefaultProductQuantity, :count).by(-1)
+
+      expect(stream_body.at_css("turbo-stream[action='remove'][target='default_product_quantity_#{record.id}']"))
+        .not_to be_nil
+    end
+
+    it "still redirects with a notice for a plain HTML request" do
+      record = create(:default_product_quantity)
+
+      delete default_product_quantity_path(record)
 
       expect(response).to redirect_to(default_product_quantities_path)
       expect(flash[:notice]).to be_present

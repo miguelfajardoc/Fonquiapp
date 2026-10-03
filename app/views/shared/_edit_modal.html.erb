@@ -1,0 +1,6 @@
+<%# Shared edit <dialog>; frame_id must match the turbo_frame_tag rendered by the resource's edit view. %>
+<dialog data-edit-modal-target="dialog"
+        data-action="cancel->edit-modal#close turbo:submit-end->edit-modal#submitEnd"
+        class="m-auto w-full max-w-md rounded border border-border bg-surface p-6 text-text backdrop:bg-text/40">
+  <%= turbo_frame_tag frame_id, data: { edit_modal_target: "frame" } %>
+</dialog>

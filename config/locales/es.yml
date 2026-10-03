@@ -179,6 +179,16 @@ es:
       title: "Nuevo default"
     edit:
       title: "Editar default"
+    client_panel:
+      choose_client: "Selecciona una zona y un cliente para ver sus defaults."
+      heading: "Defaults Cliente %{name}"
+      empty: "Este cliente no tiene defaults."
+      col_product: "Producto"
+      col_quantity: "Cantidad"
+      col_actions: "Acciones"
+    actions:
+      edit: "Editar"
+      delete: "Eliminar"
     form:
       zone_label: "Zona"
       zone_placeholder: "Selecciona una zona"

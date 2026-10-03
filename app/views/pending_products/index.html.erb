@@ -1,6 +1,6 @@
 <% content_for :title, t(".title") %>
 
-<div class="flex w-full flex-col gap-6" data-controller="modal pending-product-edit-modal">
+<div class="flex w-full flex-col gap-6" data-controller="modal edit-modal">
   <div class="mt-4 flex flex-wrap items-end justify-between gap-3">
     <%= form_with url: pending_products_path, method: :get, class: "flex flex-wrap items-end gap-3",
           data: { controller: "auto-submit", turbo_frame: "pending_products" } do %>
@@ -70,5 +70,5 @@
   <% end %>
 
   <%= render "shared/confirm_dialog" %>
-  <%= render "shared/pending_product_edit_modal" %>
+  <%= render "shared/edit_modal", frame_id: "pending_product_edit_modal" %>
 </div>

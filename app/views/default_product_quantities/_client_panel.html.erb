@@ -1,0 +1,9 @@
+<% if selected_client %>
+  <h2 class="text-lg font-semibold text-text">
+    <%= t("default_product_quantities.client_panel.heading", name: selected_client.name) %>
+  </h2>
+  <%= render "default_product_quantities/client_default_list", client: selected_client,
+                                                               default_product_quantities: client_defaults %>
+<% else %>
+  <p class="text-sm text-text-muted"><%= t("default_product_quantities.client_panel.choose_client") %></p>
+<% end %>
