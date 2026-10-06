@@ -19,6 +19,11 @@ def google_maps_url(address)
   "https://www.google.com/maps/search/?api=1&query=#{ERB::Util.url_encode(address)}"
 end
 
+# --- Staff user (password is set only on creation; change it after the first login) ---
+User.find_or_create_by!(email_address: "lacteosfonquilacpc@gmail.com") do |user|
+  user.password = "123456"
+end
+
 # --- Zones ------------------------------------------------------------------
 zones = %w[Bosa Soacha Kennedy].map { |name| Zone.find_or_create_by!(name: name) }
 

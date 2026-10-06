@@ -1,3 +1,14 @@
-<header class="flex h-16 flex-shrink-0 items-center border-b border-border bg-surface px-8">
+<header class="flex h-16 flex-shrink-0 items-center justify-between gap-4 border-b border-border bg-surface px-8">
   <span class="text-lg font-semibold text-text"><%= content_for(:title) %></span>
+
+  <% if authenticated? %>
+    <div class="flex items-center gap-3 text-sm">
+      <span class="text-text-muted"><%= Current.user.email_address %></span>
+      <%= link_to t("layouts.header.change_password"), edit_password_change_path,
+            class: "rounded border border-border px-3 py-1.5 text-text" %>
+      <%= button_to t("layouts.header.sign_out"), session_path, method: :delete,
+            form: { class: "inline" },
+            class: "rounded border border-border px-3 py-1.5 text-text cursor-pointer" %>
+    </div>
+  <% end %>
 </header>

@@ -15,6 +15,32 @@ es:
     products_default: "Default"
     products_pending: "Pendientes"
     products_daily_order: "Orden Diaria"
+  layouts:
+    header:
+      change_password: "Cambiar contraseña"
+      sign_out: "Cerrar sesión"
+  password_changes:
+    edit:
+      title: "Cambiar contraseña"
+      current_password_label: "Contraseña actual"
+      password_label: "Nueva contraseña"
+      password_confirmation_label: "Confirmar nueva contraseña"
+      submit: "Actualizar contraseña"
+    errors:
+      wrong_current: "La contraseña actual no es correcta."
+      blank: "La nueva contraseña no puede estar vacía."
+      mismatch: "Las contraseñas nuevas no coinciden."
+    flash:
+      updated: "Contraseña actualizada."
+  sessions:
+    new:
+      title: "Iniciar sesión"
+      email_label: "Correo electrónico"
+      password_label: "Contraseña"
+      submit: "Ingresar"
+    flash:
+      invalid_credentials: "Correo o contraseña incorrectos."
+      rate_limited: "Demasiados intentos. Intenta de nuevo más tarde."
   shared:
     confirm_dialog:
       confirm_question_prefix: "¿Estás seguro que deseas eliminar"

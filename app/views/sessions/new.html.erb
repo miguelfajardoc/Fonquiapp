@@ -1,0 +1,26 @@
+<% content_for :title, t(".title") %>
+
+<div class="flex flex-col gap-6 rounded border border-border bg-surface p-8">
+  <div class="flex flex-col gap-1">
+    <span class="text-lg font-semibold text-text">Fonquilac</span>
+    <h1 class="text-2xl font-semibold text-text"><%= t(".title") %></h1>
+  </div>
+
+  <%# Plain (non-Turbo) submit: the auth layout forces a reload on Turbo visits, which would drop the flash. %>
+  <%= form_with url: session_path, class: "flex flex-col gap-4", data: { turbo: false } do |form| %>
+    <div class="flex flex-col gap-1">
+      <%= form.label :email_address, t(".email_label"), class: "text-sm font-medium text-text" %>
+      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username",
+            class: "#{filter_control_class} w-full" %>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <%= form.label :password, t(".password_label"), class: "text-sm font-medium text-text" %>
+      <%= form.password_field :password, required: true, autocomplete: "current-password", maxlength: 72,
+            class: "#{filter_control_class} w-full" %>
+    </div>
+
+    <%= form.submit t(".submit"),
+          class: "h-11 w-full rounded border-0 bg-accent px-5 text-sm font-semibold text-accent-contrast cursor-pointer" %>
+  <% end %>
+</div>
