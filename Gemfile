@@ -87,4 +87,4 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "pagy", "~> 43.6"
+gem "pagy", "~> 43.7"
