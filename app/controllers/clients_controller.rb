@@ -59,6 +59,6 @@ class ClientsController < ApplicationController
   end
 
   def client_params
-    params.expect(client: %i[name address url phone zone_id])
+    params.expect(client: %i[name address phone zone_id latitude longitude])
   end
 end

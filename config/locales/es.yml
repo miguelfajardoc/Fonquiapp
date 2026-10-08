@@ -103,6 +103,7 @@ es:
       url_label: "Ubicación"
       phone_label: "Teléfono"
       zone_label: "Zona"
+      map_title: "Mapa de ubicación de %{name}"
       edit: "Editar"
       delete: "Eliminar"
     new:
@@ -112,13 +113,21 @@ es:
     form:
       name_label: "Nombre"
       address_label: "Dirección"
-      url_label: "Ubicación"
       phone_label: "Teléfono"
       zone_label: "Zona"
       new_zone_option: "+ Crear zona"
       cancel: "Cancelar"
       submit_create: "Crear"
       submit_update: "Actualizar"
+      location:
+        label: "Ubicación en el mapa"
+        locate: "Ubicar en mapa"
+        clear: "Quitar ubicación"
+        hint: "Escribe la dirección y pulsa «Ubicar en mapa», o marca el punto en el mapa (clic o arrastrando el pin) y la dirección se llenará sola."
+        not_found: "No se pudo ubicar la dirección. Revísala o marca el punto en el mapa."
+        relocate: "La dirección cambió. Pulsa «Ubicar en mapa» para reajustar el pin."
+        reverse_not_found: "No se encontró una dirección para ese punto. Escríbela a mano."
+        load_error: "No se pudo cargar el mapa."
       errors_summary:
         one: "%{count} error impidió guardar este cliente:"
         other: "%{count} errores impidieron guardar este cliente:"

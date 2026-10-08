@@ -4,15 +4,14 @@ RSpec.describe "Clients", type: :request do
   describe "GET /clients" do
     it "lists every existing client with its fields, a create control, and a delete control" do
       zone = create(:zone, name: "Norte")
-      client = create(:client, name: "Acme", address: "Calle 1", url: "https://acme.test",
-                               phone: "555-0100", zone: zone)
+      client = create(:client, name: "Acme", address: "Calle 1", phone: "555-0100", zone: zone)
 
       get clients_path
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(client.name)
       expect(response.body).to include(client.address)
-      expect(response.body).to include(client.url)
+      expect(response.body).to include(ERB::Util.html_escape(client.url))
       expect(response.body).to include(client.phone)
       expect(response.body).to include(zone.name)
       expect(response.body).to include("Crear cliente")
@@ -198,19 +197,62 @@ RSpec.describe "Clients", type: :request do
   describe "GET /clients/:id" do
     it "shows every field and an edit and delete control" do
       zone = create(:zone, name: "Norte")
-      client = create(:client, name: "Acme", address: "Calle 1", url: "https://acme.test",
-                               phone: "555-0100", zone: zone)
+      client = create(:client, name: "Acme", address: "Calle 1", phone: "555-0100", zone: zone)
 
       get client_path(client)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(client.name)
       expect(response.body).to include(client.address)
-      expect(response.body).to include(client.url)
+      expect(response.body).to include(ERB::Util.html_escape(client.url))
       expect(response.body).to include(client.phone)
       expect(response.body).to include(zone.name)
       expect(response.body).to include(edit_client_path(client))
       expect(response.body).to include("Eliminar")
+    end
+
+    def location_map
+      response.parsed_body.at_css("iframe#client_location_map")
+    end
+
+    def map_query
+      Rack::Utils.parse_query(URI(location_map["src"]).query)
+    end
+
+    it "embeds a map marking the client's coordinates" do
+      client = create(:client, address: "Calle 1", latitude: 4.711, longitude: -74.0721)
+
+      get client_path(client)
+
+      expect(location_map["src"]).to start_with(GoogleMaps::EMBED_URL)
+      expect(map_query).to include("key" => "test-maps-key", "q" => "4.711,-74.0721")
+    end
+
+    it "embeds a map searching the address when there is no pin" do
+      client = create(:client, address: "Calle 22 # 1-78, Bogotá", latitude: nil, longitude: nil)
+
+      get client_path(client)
+
+      expect(map_query["q"]).to eq("Calle 22 # 1-78, Bogotá")
+    end
+
+    it "shows no map for a client without address or pin" do
+      client = create(:client, address: nil, latitude: nil, longitude: nil)
+
+      get client_path(client)
+
+      expect(response).to have_http_status(:ok)
+      expect(location_map).to be_nil
+    end
+
+    it "shows no map when no Google Maps key is configured" do
+      allow(GoogleMaps).to receive(:api_key).and_return(nil)
+      client = create(:client, latitude: 4.711, longitude: -74.0721)
+
+      get client_path(client)
+
+      expect(response).to have_http_status(:ok)
+      expect(location_map).to be_nil
     end
   end
 
@@ -232,6 +274,32 @@ RSpec.describe "Clients", type: :request do
       expect(zone_select.at_css("option[value='#{zone.id}']").text).to eq("Norte")
       expect(zone_select.at_css("option[value='new']").text).to eq("+ Crear zona")
     end
+
+    it "offers the map location picker with no pin and no url field" do
+      get new_client_path
+
+      client_form = response.parsed_body.at_css("form[action='#{clients_path}']")
+      expect(client_form["data-controller"]).to eq("location-picker")
+      expect(client_form["data-location-picker-api-key-value"]).to eq("test-maps-key")
+      expect(client_form["data-location-picker-auto-locate-value"]).to eq("false")
+      expect(client_form.at_css("#client_location_picker")).to be_present
+      expect(client_form.at_css("input[type=hidden][name='client[latitude]']")["value"]).to be_nil
+      expect(client_form.at_css("input[type=hidden][name='client[longitude]']")["value"]).to be_nil
+      expect(client_form.at_css("[name='client[url]']")).to be_nil
+      expect(response.body).to include("Ubicar en mapa", "Quitar ubicación")
+    end
+
+    it "renders the form without the map when no Google Maps key is configured" do
+      allow(GoogleMaps).to receive(:api_key).and_return(nil)
+
+      get new_client_path
+
+      client_form = response.parsed_body.at_css("form[action='#{clients_path}']")
+      expect(client_form["data-controller"]).to be_nil
+      expect(client_form.at_css("#client_location_picker")).to be_nil
+      expect(client_form.at_css("input[type=hidden][name='client[latitude]']")).to be_present
+      expect(response.body).not_to include("test-maps-key")
+    end
   end
 
   describe "GET /clients/:id/edit" do
@@ -244,6 +312,26 @@ RSpec.describe "Clients", type: :request do
       client_form = response.parsed_body.at_css("form[action='#{client_path(client)}']")
       expect(client_form.at_css("input[type=submit]")["value"]).to eq("Actualizar")
     end
+
+    it "carries the saved pin into the hidden coordinate fields" do
+      client = create(:client, address: "Calle 1", latitude: 4.711, longitude: -74.0721)
+
+      get edit_client_path(client)
+
+      client_form = response.parsed_body.at_css("form[action='#{client_path(client)}']")
+      expect(client_form.at_css("input[name='client[latitude]']")["value"]).to eq("4.711")
+      expect(client_form.at_css("input[name='client[longitude]']")["value"]).to eq("-74.0721")
+      expect(client_form["data-location-picker-auto-locate-value"]).to eq("false")
+    end
+
+    it "auto-locates a client that has an address but no pin" do
+      client = create(:client, address: "Calle 1", latitude: nil, longitude: nil)
+
+      get edit_client_path(client)
+
+      client_form = response.parsed_body.at_css("form[action='#{client_path(client)}']")
+      expect(client_form["data-location-picker-auto-locate-value"]).to eq("true")
+    end
   end
 
   describe "POST /clients" do
@@ -255,6 +343,36 @@ RSpec.describe "Clients", type: :request do
       end.to change(Client, :count).by(1)
 
       expect(response).to redirect_to(clients_path)
+    end
+
+    it "stores the pin's coordinates and derives the url from them" do
+      zone = create(:zone)
+
+      post clients_path, params: { client: { name: "Acme", zone_id: zone.id, address: "Calle 1",
+                                             latitude: "4.711", longitude: "-74.0721" } }
+
+      client = Client.find_by!(name: "Acme")
+      expect([client.latitude, client.longitude]).to eq([BigDecimal("4.711"), BigDecimal("-74.0721")])
+      expect(client.url).to eq(GoogleMaps.search_url("4.711,-74.0721"))
+    end
+
+    it "ignores a submitted url" do
+      zone = create(:zone)
+
+      post clients_path, params: { client: { name: "Acme", zone_id: zone.id, address: "Calle 1",
+                                             url: "https://example.test" } }
+
+      expect(Client.find_by!(name: "Acme").url).to eq(GoogleMaps.search_url("Calle 1"))
+    end
+
+    it "re-renders the form when only one coordinate is sent" do
+      zone = create(:zone)
+
+      expect do
+        post clients_path, params: { client: { name: "Acme", zone_id: zone.id, latitude: "4.711", longitude: "" } }
+      end.not_to change(Client, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
     end
 
     it "re-renders the form with a blank name" do
@@ -285,6 +403,26 @@ RSpec.describe "Clients", type: :request do
 
       expect(response).to redirect_to(clients_path)
       expect(client.reload.name).to eq("Acme Corp")
+    end
+
+    it "updates the pin and re-derives the url" do
+      client = create(:client, address: "Calle 1", latitude: nil, longitude: nil)
+
+      patch client_path(client), params: { client: { latitude: "4.65", longitude: "-74.1" } }
+
+      client.reload
+      expect([client.latitude, client.longitude]).to eq([BigDecimal("4.65"), BigDecimal("-74.1")])
+      expect(client.url).to eq(GoogleMaps.search_url("4.65,-74.1"))
+    end
+
+    it "removes the pin when the coordinates are cleared" do
+      client = create(:client, address: "Calle 1", latitude: 4.65, longitude: -74.1)
+
+      patch client_path(client), params: { client: { latitude: "", longitude: "" } }
+
+      client.reload
+      expect(client.latitude).to be_nil
+      expect(client.url).to eq(GoogleMaps.search_url("Calle 1"))
     end
 
     it "does not update a client with a blank name" do

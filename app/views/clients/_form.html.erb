@@ -1,58 +1,78 @@
 <div data-controller="new-zone-dialog">
-  <%= form_with model: client, class: "flex flex-col gap-4 max-w-sm" do |form| %>
-    <% if client.errors.any? %>
-      <div class="rounded border border-accent bg-surface-2 px-4 py-3 text-sm text-text">
-        <p class="font-semibold"><%= t(".errors_summary", count: client.errors.count) %></p>
-        <ul class="list-disc pl-5">
-          <% client.errors.each do |error| %>
-            <li><%= error.full_message %></li>
-          <% end %>
-        </ul>
+  <%= form_with model: client, class: "grid gap-6 lg:grid-cols-[24rem_1fr] lg:items-start",
+        data: location_picker_data(client) do |form| %>
+    <div class="flex flex-col gap-4">
+      <% if client.errors.any? %>
+        <div class="rounded border border-accent bg-surface-2 px-4 py-3 text-sm text-text">
+          <p class="font-semibold"><%= t(".errors_summary", count: client.errors.count) %></p>
+          <ul class="list-disc pl-5">
+            <% client.errors.each do |error| %>
+              <li><%= error.full_message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="flex flex-col gap-1">
+        <%= form.label :name, t(".name_label"), class: "text-sm font-medium text-text" %>
+        <%= form.text_field :name,
+              class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                       focus:outline-none focus:ring-2 focus:ring-accent" %>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <%= form.label :address, t(".address_label"), class: "text-sm font-medium text-text" %>
+        <%= form.text_field :address,
+              data: { location_picker_target: "address", action: "input->location-picker#addressChanged" },
+              class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                       focus:outline-none focus:ring-2 focus:ring-accent" %>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <%= form.label :phone, t(".phone_label"), class: "text-sm font-medium text-text" %>
+        <%= form.text_field :phone,
+              class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                       focus:outline-none focus:ring-2 focus:ring-accent" %>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <%= form.label :zone_id, t(".zone_label"), class: "text-sm font-medium text-text" %>
+        <%= form.select :zone_id,
+              options_from_collection_for_select(Zone.order(:name), :id, :name, client.zone_id) +
+                content_tag(:option, t(".new_zone_option"), value: "new"),
+              {},
+              { id: "client_zone_select",
+                data: { action: "change->new-zone-dialog#openOnNewOption",
+                        "new-zone-dialog-target": "select" },
+                class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                         focus:outline-none focus:ring-2 focus:ring-accent" } %>
+      </div>
+    </div>
+
+    <%# Coordinates are only ever set by the map pin; without a key they keep their saved values. %>
+    <%= form.hidden_field :latitude, data: { location_picker_target: "latitude" } %>
+    <%= form.hidden_field :longitude, data: { location_picker_target: "longitude" } %>
+
+    <% if GoogleMaps.api_key %>
+      <div id="client_location_picker" class="flex flex-col gap-2">
+        <span class="text-sm font-medium text-text"><%= t(".location.label") %></span>
+        <div data-location-picker-target="map" class="h-96 w-full rounded border border-border bg-surface-2"></div>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" data-action="location-picker#locate"
+                  class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text cursor-pointer">
+            <%= t(".location.locate") %>
+          </button>
+          <button type="button" data-action="location-picker#clear"
+                  class="flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text cursor-pointer">
+            <%= t(".location.clear") %>
+          </button>
+        </div>
+        <p class="text-sm text-text-muted"><%= t(".location.hint") %></p>
+        <p data-location-picker-target="status" class="hidden text-sm font-medium text-accent" role="status"></p>
       </div>
     <% end %>
 
-    <div class="flex flex-col gap-1">
-      <%= form.label :name, t(".name_label"), class: "text-sm font-medium text-text" %>
-      <%= form.text_field :name,
-            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                     focus:outline-none focus:ring-2 focus:ring-accent" %>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <%= form.label :address, t(".address_label"), class: "text-sm font-medium text-text" %>
-      <%= form.text_field :address,
-            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                     focus:outline-none focus:ring-2 focus:ring-accent" %>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <%= form.label :url, t(".url_label"), class: "text-sm font-medium text-text" %>
-      <%= form.text_field :url,
-            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                     focus:outline-none focus:ring-2 focus:ring-accent" %>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <%= form.label :phone, t(".phone_label"), class: "text-sm font-medium text-text" %>
-      <%= form.text_field :phone,
-            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                     focus:outline-none focus:ring-2 focus:ring-accent" %>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <%= form.label :zone_id, t(".zone_label"), class: "text-sm font-medium text-text" %>
-      <%= form.select :zone_id,
-            options_from_collection_for_select(Zone.order(:name), :id, :name, client.zone_id) +
-              content_tag(:option, t(".new_zone_option"), value: "new"),
-            {},
-            { id: "client_zone_select",
-              data: { action: "change->new-zone-dialog#openOnNewOption",
-                      "new-zone-dialog-target": "select" },
-              class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                       focus:outline-none focus:ring-2 focus:ring-accent" } %>
-    </div>
-
-    <div class="flex justify-end gap-3">
+    <div class="flex justify-end gap-3 lg:col-span-2">
       <%= link_to t(".cancel"), clients_path,
             class: "flex h-11 items-center rounded border border-border px-5 text-sm font-semibold text-text" %>
       <%= form.submit(client.persisted? ? t(".submit_update") : t(".submit_create"),

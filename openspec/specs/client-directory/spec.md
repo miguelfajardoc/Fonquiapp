@@ -35,9 +35,12 @@ can be referred to unambiguously.
 
 The system SHALL persist a client as a record with a name and optional
 contact details. The name SHALL be present (non-blank). The fields
-`address`, `url` and `phone` SHALL each be optional free text. Every client
-SHALL be linked to exactly one existing zone through a required `zone_id`
-reference, and the datastore SHALL enforce that referential integrity.
+`address` and `phone` SHALL each be optional free text. The client SHALL
+also have an optional location made of `latitude` and `longitude`, and a
+`url` that the system derives from that location and the address (it is not
+free text). Every client SHALL be linked to exactly one existing zone through
+a required `zone_id` reference, and the datastore SHALL enforce that
+referential integrity.
 
 #### Scenario: Client created with a name and a zone
 
@@ -60,8 +63,10 @@ reference, and the datastore SHALL enforce that referential integrity.
 #### Scenario: Contact details are optional
 
 - **GIVEN** a zone exists
-- **WHEN** a client is created with a `name` and a zone but no `address`, `url` or `phone`
-- **THEN** the client is persisted and the omitted fields are empty
+- **WHEN** a client is created with a `name` and a zone but no `address`,
+  `phone`, `latitude` or `longitude`
+- **THEN** the client is persisted, the omitted fields are empty, and its
+  `url` is empty
 
 #### Scenario: Client rejected when the zone does not exist
 

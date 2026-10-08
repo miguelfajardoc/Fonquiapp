@@ -19,7 +19,7 @@ RSpec.describe DailyProductOrderConsolidation do
 
   describe "#call" do
     it "shows a client's name, address, hyperlink, and current pending products in their own columns" do
-      client = stop_client(name: "Tienda Norte", address: "Calle 1", url: "https://maps.example/1")
+      client = stop_client(name: "Tienda Norte", address: "Calle 1", latitude: 4.711, longitude: -74.0721)
       product = create(:product, name: "Queso")
       other_product = create(:product, name: "Mantequilla")
       batch_order(client: client, product: product, quantity: 4)
@@ -31,7 +31,7 @@ RSpec.describe DailyProductOrderConsolidation do
 
       client_row = rows.find { |row| row[0] == "Tienda Norte" }
       expect(client_row[1]).to eq("Calle 1")
-      expect(client_row[2]).to eq('=HYPERLINK("https://maps.example/1","Ver ubicación")')
+      expect(client_row[2]).to eq(%(=HYPERLINK("#{GoogleMaps.search_url("4.711,-74.0721")}","Ver ubicación")))
       expect(client_row[3..]).to contain_exactly("Queso: 2", "Mantequilla: 1")
 
       location_cell = package.workbook.worksheets.first.rows.find do |row|

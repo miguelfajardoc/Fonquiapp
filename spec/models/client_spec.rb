@@ -20,14 +20,56 @@ RSpec.describe Client, type: :model do
   end
 
   describe "optional contact details" do
-    it "persists without address, url or phone" do
-      client = build(:client, address: nil, url: nil, phone: nil)
+    it "persists without address, phone or location, leaving the url empty" do
+      client = build(:client, address: nil, phone: nil, latitude: nil, longitude: nil)
 
       expect(client.save).to be(true)
       client.reload
       expect(client.address).to be_nil
       expect(client.url).to be_nil
       expect(client.phone).to be_nil
+      expect(client.latitude).to be_nil
+    end
+  end
+
+  describe "coordinates" do
+    it "persists a complete pin" do
+      client = create(:client, latitude: 4.711, longitude: -74.0721)
+
+      expect([client.reload.latitude, client.longitude]).to eq([BigDecimal("4.711"), BigDecimal("-74.0721")])
+    end
+
+    it "is invalid with only one coordinate" do
+      expect(build(:client, latitude: 4.711, longitude: nil)).not_to be_valid
+      expect(build(:client, latitude: nil, longitude: -74.0721)).not_to be_valid
+    end
+
+    it "is invalid with out-of-range coordinates" do
+      expect(build(:client, latitude: 95, longitude: -74)).not_to be_valid
+      expect(build(:client, latitude: 4.7, longitude: -181)).not_to be_valid
+    end
+  end
+
+  describe "derived url" do
+    it "links to the coordinates when the client has a pin" do
+      client = create(:client, address: "Calle 1", latitude: 4.711, longitude: -74.0721)
+
+      expect(client.url).to eq("https://www.google.com/maps/search/?api=1&query=4.711%2C-74.0721")
+    end
+
+    it "searches the address when there is no pin" do
+      client = create(:client, address: "Calle 22 # 1-78, Bogotá", latitude: nil, longitude: nil)
+
+      expect(client.url).to eq(GoogleMaps.search_url("Calle 22 # 1-78, Bogotá"))
+    end
+
+    it "replaces a hand-pasted link the next time the client is saved" do
+      client = create(:client, address: "Calle 1")
+      client.update_column(:url, "https://maps.app.goo.gl/abc") # rubocop:disable Rails/SkipsModelValidations
+
+      client.update!(phone: "555")
+
+      expect(client.url).to eq(GoogleMaps.search_url("Calle 1"))
     end
   end
 

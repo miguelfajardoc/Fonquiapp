@@ -15,10 +15,6 @@ def random_bogota_address
   "#{STREET_TYPES.sample} #{rand(1..170)} # #{rand(1..99)}-#{rand(1..99)}, Bogotá y alrededores"
 end
 
-def google_maps_url(address)
-  "https://www.google.com/maps/search/?api=1&query=#{ERB::Util.url_encode(address)}"
-end
-
 # --- Staff user (password is set only on creation; change it after the first login) ---
 User.find_or_create_by!(email_address: "lacteosfonquilacpc@gmail.com") do |user|
   user.password = "123456"
@@ -35,11 +31,9 @@ end
 # --- Clients (2 per zone, topped up rather than re-keyed since names are random) ---
 zones.each do |zone|
   (2 - zone.clients.count).times do
-    address = random_bogota_address
     zone.clients.create!(
       name: random_client_name,
-      address: address,
-      url: google_maps_url(address),
+      address: random_bogota_address,
       phone: Faker::PhoneNumber.phone_number
     )
   end
