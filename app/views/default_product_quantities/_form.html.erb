@@ -13,23 +13,25 @@
   <% end %>
 
   <div class="flex flex-col gap-1">
-    <%= form.label :zone_id, t(".zone_label"), class: "text-sm font-medium text-text" %>
-    <%= form.select :zone_id,
-          options_from_collection_for_select(Zone.order(:name), :id, :name, default_product_quantity.zone_id),
-          { include_blank: t(".zone_placeholder") },
-          { data: { action: "change->client-zone-filter#reload change->client-panel-filter#reload" },
-            class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                     focus:outline-none focus:ring-2 focus:ring-accent" } %>
+    <%= label_tag :zone_id, t(".zone_label"), class: "text-sm font-medium text-text" %>
+    <%= select_tag :zone_id,
+          options_from_collection_for_select(Zone.order(:name), :id, :name, zone_id),
+          include_blank: t(".zone_placeholder"),
+          data: { action: "change->client-zone-filter#reload change->client-panel-filter#clear" },
+          class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                   focus:outline-none focus:ring-2 focus:ring-accent" %>
   </div>
 
   <div class="flex flex-col gap-1">
-    <%= form.label :client_id, t(".client_label"), class: "text-sm font-medium text-text" %>
-    <%= turbo_frame_tag "client_combobox", data: { client_zone_filter_target: "frame" } do %>
-      <%= form.combobox :client_id,
-            client_options_default_product_quantities_path(zone_id: default_product_quantity.zone_id) do |c|
-        c.customize_input class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
-                                   focus:outline-none focus:ring-2 focus:ring-accent"
-      end %>
+    <%= form.label :route_id, t(".route_label"), class: "text-sm font-medium text-text" %>
+    <%= turbo_frame_tag "route_select", data: { client_zone_filter_target: "frame" } do %>
+      <%= form.select :route_id,
+            options_from_collection_for_select(zone_id.present? ? Route.where(zone_id: zone_id).order(:name) : [],
+                                               :id, :name, default_product_quantity.route_id),
+            { include_blank: t(".route_placeholder") },
+            { data: { action: "change->client-panel-filter#reload" },
+              class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
+                       focus:outline-none focus:ring-2 focus:ring-accent" } %>
     <% end %>
   </div>
 
@@ -44,7 +46,7 @@
 
   <div class="flex flex-col gap-1">
     <%= form.label :quantity, t(".quantity_label"), class: "text-sm font-medium text-text" %>
-    <%= form.number_field :quantity, min: 0,
+    <%= form.number_field :quantity, min: 1,
           class: "h-11 rounded border border-border bg-surface px-3 text-sm text-text
                    focus:outline-none focus:ring-2 focus:ring-accent" %>
   </div>

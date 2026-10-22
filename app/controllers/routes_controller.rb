@@ -50,6 +50,6 @@ class RoutesController < ApplicationController
   end
 
   def route_params
-    params.expect(route: [:name, :zone_id, route_stops_attributes: [[:id, :client_id, :position, :_destroy]]])
+    params.expect(route: [:name, :zone_id, { route_stops_attributes: [%i[id client_id position _destroy]] }])
   end
 end

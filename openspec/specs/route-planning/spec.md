@@ -169,8 +169,8 @@ A zone that is referenced by any route SHALL NOT be deletable. A client that
 is referenced by any route stop SHALL NOT be deletable. A route that is
 referenced by any daily product order SHALL NOT be deletable. Deleting a
 route that no daily product order references SHALL delete its route stops
-along with it, since a route stop has no meaning outside the route that
-ordered it.
+and its default product quantities along with it, since neither has meaning
+outside the route it belongs to.
 
 #### Scenario: A referenced zone cannot be deleted
 
@@ -190,12 +190,20 @@ ordered it.
 - **WHEN** that route is deleted
 - **THEN** the route and both of its route stops no longer exist
 
+#### Scenario: Deleting a route deletes its default quantities
+
+- **GIVEN** a route with two default product quantities and no daily product orders
+- **WHEN** that route is deleted
+- **THEN** the route and both of its default product quantities no longer exist
+- **AND** the products they referenced still exist
+
 #### Scenario: A route referenced by a daily product order cannot be deleted
 
-- **GIVEN** a route with route stops that is referenced by a daily product order
+- **GIVEN** a route with route stops and default product quantities that is
+  referenced by a daily product order
 - **WHEN** deletion of that route is attempted
 - **THEN** the route is not deleted and still exists
-- **AND** its route stops still exist
+- **AND** its route stops and default product quantities still exist
 
 #### Scenario: An unreferenced zone can still be deleted
 

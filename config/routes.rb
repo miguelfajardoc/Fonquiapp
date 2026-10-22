@@ -17,9 +17,7 @@ Rails.application.routes.draw do
     collection { get :client_options }
   end
   resources :products, except: [:show]
-  resources :default_product_quantities, except: [:show] do
-    collection { get :client_options }
-  end
+  resources :default_product_quantities, except: [:show]
   resources :pending_products, except: [:show] do
     member { patch :toggle_state }
     collection { get :client_options }

@@ -1,0 +1,139 @@
+#!/usr/bin/env ruby
+# Runs and maintains the real-data instance of the app on this machine, in the production environment
+# (its own databases, port 3001), next to the development environment (seed data, port 3000).
+# Only one of the two runs at a time. See README.md for the workflow.
+require "fileutils"
+require "json"
+require "open3"
+
+APP_ROOT = File.expand_path("..", __dir__)
+ENV_FILE = File.join(APP_ROOT, ".env.local-prod")
+MANIFEST = File.join(APP_ROOT, "public/prod-assets/.manifest.json")
+USAGE = <<~TEXT.freeze
+  Usage: bin/local-prod <command>
+
+    setup    First time: create the production databases, the staff user (needs ADMIN_PASSWORD) and assets
+    update   After new code: back up, migrate the production databases and rebuild assets
+    start    Serve the real app at http://localhost:3001 (PORT overrides)
+    backup   Dump fonquiapp_production into BACKUP_DIR (set it in .env.local-prod)
+TEXT
+
+ENV["RAILS_ENV"] = "production"
+$stdout.sync = true
+
+def system!(*)
+  system(*, exception: true)
+end
+
+# Plain KEY=value lines; variables already set in the shell win.
+def load_env_file
+  return unless File.exist?(ENV_FILE)
+
+  File.foreach(ENV_FILE) do |line|
+    line = line.strip
+    next if line.empty? || line.start_with?("#")
+
+    key, value = line.split("=", 2)
+    next if value.nil?
+
+    ENV[key.strip] ||= value.strip.delete_prefix('"').delete_suffix('"').delete_prefix("'").delete_suffix("'")
+  end
+end
+
+def step(name)
+  puts "\n== #{name} =="
+  yield
+rescue StandardError => e
+  abort "\n#{e.message}\nbin/local-prod stopped at step: #{name}"
+end
+
+def executable?(command)
+  ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? { |dir| File.executable?(File.join(dir, command)) }
+end
+
+# Connection settings of the primary production database, straight from config/database.yml.
+def primary_db_config
+  json, status = Open3.capture2(
+    "bin/rails", "runner",
+    'puts ActiveRecord::Base.configurations.configs_for(env_name: "production", name: "primary")' \
+    ".configuration_hash.to_json"
+  )
+  raise "Could not read the production database configuration" unless status.success?
+
+  JSON.parse(json.lines.last)
+end
+
+def backup_dir
+  raise "pg_dump not found. Install it with: sudo apt install postgresql-client" unless executable?("pg_dump")
+
+  dir = ENV["BACKUP_DIR"].to_s.strip
+  if dir.empty?
+    raise "BACKUP_DIR is not set. Add a line like this to .env.local-prod:\n  " \
+          "BACKUP_DIR=/mnt/c/Users/<you>/OneDrive/fonquiapp-backups"
+  end
+
+  FileUtils.mkdir_p(dir)
+  raise "Backup directory is not writable: #{dir}" unless File.writable?(dir)
+
+  dir
+end
+
+def pg_dump!(db, file)
+  system!(
+    { "PGPASSWORD" => db["password"].to_s },
+    "pg_dump", "--format=custom", "--host", db["host"].to_s, "--port", db["port"].to_s,
+    "--username", db["username"].to_s, "--file", file, db["database"]
+  )
+end
+
+def backup
+  dir = backup_dir
+  db = primary_db_config
+  file = File.join(dir, "#{db["database"]}-#{Time.now.getlocal.strftime("%Y%m%d-%H%M%S")}.dump")
+  raise "Backup file already exists, not overwriting: #{file}" if File.exist?(file)
+
+  pg_dump!(db, file)
+  puts "Backup written to #{file}"
+end
+
+def pending_migrations?
+  output, status = Open3.capture2e("bin/rails", "db:migrate:status")
+  unless status.success?
+    reason = output[/Database not found: [\w-]+/] || "see bin/rails db:migrate:status"
+    abort "Could not read the production migration status: #{reason}.\nHas bin/local-prod setup been run?"
+  end
+
+  output.lines.any? { |line| line.strip.start_with?("down") }
+end
+
+def start
+  abort "Production assets are not built. Run: bin/local-prod update" unless File.exist?(MANIFEST)
+  abort "The production database has pending migrations. Run: bin/local-prod update" if pending_migrations?
+
+  exec "bin/rails", "server", "-p", ENV.fetch("PORT", "3001"), "-P", "tmp/pids/production.pid"
+end
+
+FileUtils.chdir APP_ROOT do
+  load_env_file
+
+  case ARGV.first
+  when "setup"
+    step("Preparing production databases") { system! "bin/rails db:prepare" }
+    step("Seeding") { system! "bin/rails db:seed" }
+    step("Building assets") { system! "bin/rails assets:precompile" }
+    puts "\nDone. Start the real app with: bin/local-prod start"
+  when "update"
+    warn "Warning: uncommitted changes will become part of the real app." unless `git status --porcelain`.strip.empty?
+    step("Backing up") { backup }
+    step("Migrating production databases") { system! "bin/rails db:migrate" }
+    step("Building assets") { system! "bin/rails assets:precompile" }
+    puts "\nDone. Start the real app with: bin/local-prod start"
+  when "start"
+    start
+  when "backup"
+    step("Backing up") { backup }
+  else
+    puts USAGE
+    exit 1
+  end
+end

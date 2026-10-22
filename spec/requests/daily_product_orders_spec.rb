@@ -119,9 +119,7 @@ RSpec.describe "DailyProductOrders", type: :request do
     let(:soacha) { create(:zone, name: "Soacha") }
 
     def generate(route)
-      client = create(:client, zone: route.zone)
-      create(:route_stop, route: route, client: client)
-      create(:default_product_quantity, zone: route.zone, client: client, quantity: 2)
+      create(:default_product_quantity, route: route, quantity: 2)
       DailyProductOrderGeneration.new(route: route).call
     end
 
@@ -259,9 +257,7 @@ RSpec.describe "DailyProductOrders", type: :request do
     it "generates the route's batch and redirects with a success notice" do
       zone = create(:zone)
       route = create(:route, zone: zone)
-      client = create(:client, zone: zone)
-      create(:route_stop, route: route, client: client)
-      create(:default_product_quantity, zone: zone, client: client, product: create(:product), quantity: 6)
+      create(:default_product_quantity, route: route, product: create(:product), quantity: 6)
 
       expect do
         post generate_daily_product_orders_path, params: { zone_id: zone.id, route_id: route.id }
@@ -280,8 +276,7 @@ RSpec.describe "DailyProductOrders", type: :request do
       client = create(:client, zone: zone, name: "Tienda Test")
       create(:route_stop, route: route, client: client)
       product = create(:product, name: "Queso")
-      order = create(:daily_product_order, zone: zone, route: route, client: client, product: product,
-                                           day: Date.current, quantity: 4)
+      order = create(:daily_product_order, zone: zone, route: route, product: product, day: Date.current, quantity: 4)
 
       get consolidated_daily_product_orders_path(route_id: route.id, day: order.day.iso8601)
 

@@ -1,13 +1,14 @@
 class DefaultProductQuantity < ApplicationRecord
   include Filterable
 
+  belongs_to :route
   belongs_to :product
-  belongs_to :client
-  belongs_to :zone
 
-  validates :quantity, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
-  validates :product_id, uniqueness: { scope: %i[client_id zone_id] }
+  delegate :zone, to: :route
 
-  scope :filter_by_client_name, ->(name) { joins(:client).where_unaccent_contains("clients.name", name) }
-  scope :filter_by_zone_id, ->(zone_id) { where(zone_id: zone_id) }
+  validates :quantity, numericality: { only_integer: true, greater_than: 0 }
+  validates :product_id, uniqueness: { scope: :route_id }
+
+  scope :filter_by_zone_id, ->(zone_id) { where(route_id: Route.where(zone_id: zone_id).select(:id)) }
+  scope :filter_by_route_id, ->(route_id) { where(route_id: route_id) }
 end

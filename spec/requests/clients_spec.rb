@@ -457,7 +457,7 @@ RSpec.describe "Clients", type: :request do
 
     it "does not delete a client still referenced by an ordering record, and reports why" do
       client = create(:client)
-      create(:daily_product_order, client: client)
+      create(:pending_product, client: client, zone: client.zone)
 
       expect do
         delete client_path(client)

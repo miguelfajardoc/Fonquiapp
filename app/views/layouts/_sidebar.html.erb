@@ -4,27 +4,24 @@
   </div>
 
   <nav class="flex flex-col gap-1">
-    <%= link_to t("nav.zones"), zones_path,
-          class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "zones" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
-    <%= link_to t("nav.clients"), clients_path,
-          class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "clients" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
-    <%= link_to t("nav.routes"), routes_path,
-          class: "rounded px-3 py-2 text-sm font-medium #{controller.controller_name == "routes" ? "bg-white/5 text-accent" : "text-sidebar-text hover:bg-white/5"}" %>
+    <%= link_to t("nav.zones"), zones_path, class: nav_entry_class(nav_active?("zones")) %>
+    <%= link_to t("nav.clients"), clients_path, class: nav_entry_class(nav_active?("clients")) %>
 
     <div class="group">
-      <div class="cursor-default rounded px-3 py-2 text-sm font-medium text-sidebar-text">
-        <%= t("nav.products") %>
+      <div class="cursor-default <%= nav_entry_class(nav_active?("routes", "default_product_quantities")) %>">
+        <%= t("nav.routes") %>
       </div>
       <div class="hidden flex-col gap-1 pl-3 group-hover:flex">
-        <%= link_to t("nav.products"), products_path,
-              class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
-        <%= link_to t("nav.products_default"), default_product_quantities_path,
-              class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
-        <%= link_to t("nav.products_pending"), pending_products_path,
-              class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
-        <%= link_to t("nav.products_daily_order"), daily_product_orders_path,
+        <%= link_to t("nav.routes"), routes_path, class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
+        <%= link_to t("nav.routes_default"), default_product_quantities_path,
               class: "rounded px-3 py-1.5 text-sm text-sidebar-text-muted" %>
       </div>
     </div>
+
+    <%= link_to t("nav.products"), products_path, class: nav_entry_class(nav_active?("products")) %>
+    <%= link_to t("nav.pending_products"), pending_products_path,
+          class: nav_entry_class(nav_active?("pending_products")) %>
+    <%= link_to t("nav.daily_product_orders"), daily_product_orders_path,
+          class: nav_entry_class(nav_active?("daily_product_orders")) %>
   </nav>
 </aside>

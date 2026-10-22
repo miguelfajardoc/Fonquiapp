@@ -8,7 +8,7 @@
   <button type="button"
           class="rounded border border-border px-3 py-1.5 text-text"
           data-action="modal#open"
-          data-modal-name-param="<%= "#{default_product_quantity.client.name} / #{default_product_quantity.product.name}" %>"
+          data-modal-name-param="<%= "#{default_product_quantity.route.name} / #{default_product_quantity.product.name}" %>"
           data-modal-url-param="<%= default_product_quantity_path(default_product_quantity) %>">
     <%= t("default_product_quantities.actions.delete") %>
   </button>

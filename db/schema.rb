@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_08_211706) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -29,7 +29,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_211706) do
   end
 
   create_table "daily_product_orders", force: :cascade do |t|
-    t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.date "day", null: false
     t.bigint "product_id", null: false
@@ -37,7 +36,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_211706) do
     t.bigint "route_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "zone_id", null: false
-    t.index ["client_id"], name: "index_daily_product_orders_on_client_id"
     t.index ["product_id"], name: "index_daily_product_orders_on_product_id"
     t.index ["route_id", "day"], name: "index_daily_product_orders_on_route_id_and_day"
     t.index ["route_id"], name: "index_daily_product_orders_on_route_id"
@@ -45,16 +43,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_211706) do
   end
 
   create_table "default_product_quantities", force: :cascade do |t|
-    t.bigint "client_id", null: false
     t.datetime "created_at", null: false
     t.bigint "product_id", null: false
     t.integer "quantity", null: false
+    t.bigint "route_id", null: false
     t.datetime "updated_at", null: false
-    t.bigint "zone_id", null: false
-    t.index ["client_id"], name: "index_default_product_quantities_on_client_id"
-    t.index ["product_id", "client_id", "zone_id"], name: "idx_on_product_id_client_id_zone_id_64c758f1b9", unique: true
     t.index ["product_id"], name: "index_default_product_quantities_on_product_id"
-    t.index ["zone_id"], name: "index_default_product_quantities_on_zone_id"
+    t.index ["route_id", "product_id"], name: "index_default_product_quantities_on_route_id_and_product_id", unique: true
+    t.index ["route_id"], name: "index_default_product_quantities_on_route_id"
   end
 
   create_table "pending_products", force: :cascade do |t|
@@ -124,13 +120,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_211706) do
   end
 
   add_foreign_key "clients", "zones"
-  add_foreign_key "daily_product_orders", "clients"
   add_foreign_key "daily_product_orders", "products"
   add_foreign_key "daily_product_orders", "routes"
   add_foreign_key "daily_product_orders", "zones"
-  add_foreign_key "default_product_quantities", "clients"
   add_foreign_key "default_product_quantities", "products"
-  add_foreign_key "default_product_quantities", "zones"
+  add_foreign_key "default_product_quantities", "routes"
   add_foreign_key "pending_products", "clients"
   add_foreign_key "pending_products", "products"
   add_foreign_key "pending_products", "zones"

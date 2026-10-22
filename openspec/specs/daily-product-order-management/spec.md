@@ -2,8 +2,8 @@
 
 ## Purpose
 
-The daily product order management flow lets staff generate a zone's daily
-delivery totals (standing defaults plus pending deliveries) with one action,
+The daily product order management flow lets staff generate a route's daily
+delivery totals (taken from the route's standing defaults) with one action,
 review what has been generated, and download a consolidated pick sheet for
 a generated batch, without needing console or database access.
 
@@ -30,21 +30,18 @@ product order record.
   an individual daily product order
 - **THEN** the system reports no matching route
 
-### Requirement: Route-scoped batch generation
+### Requirement: Route batch generation from defaults
 
 The index page SHALL let a user choose a zone and then a route belonging to
 that zone, and generate that route's daily product order batch. The route
 choices SHALL be limited to the routes of the currently selected zone, and
 changing the selected zone SHALL refresh the route choices and clear any
-previously chosen route. Generating SHALL, for every client that is a stop
-of the chosen route and every product, compute a total equal to that
-client+product's `DefaultProductQuantity` quantity (zero if none) plus the
-sum of that client+product's `PendingProduct` records currently in the
-`pending` state, SHALL persist one `DailyProductOrder` per client+product
-combination whose total is greater than zero (dated with the generation
-date and referencing the chosen route and its zone), and SHALL create no
-record for a combination whose total is zero. The system SHALL require a
-route to be chosen before generating.
+previously chosen route. Generating SHALL persist, for every default product
+quantity of the chosen route, one `DailyProductOrder` for that product with
+the default's quantity, dated with the generation date and referencing the
+chosen route and its zone. Generating SHALL NOT take pending products into
+account, and SHALL create no record for a product the chosen route has no
+default for. The system SHALL require a route to be chosen before generating.
 
 #### Scenario: Route choices follow the selected zone
 
@@ -55,53 +52,42 @@ route to be chosen before generating.
 - **WHEN** the selection is changed to zone B
 - **THEN** the route choices are "Ruta 3" only and no route is chosen
 
-#### Scenario: Generating combines defaults and pending quantities
+#### Scenario: Generating uses the route's defaults
 
-- **GIVEN** a client that is a stop of the chosen route has a default
-  quantity of 5 for a product and one pending product of quantity 3 for
-  that same client+product in `pending` state
+- **GIVEN** the chosen route has a default quantity of 20 for "Queso" and
+  of 5 for "Crema"
 - **WHEN** the route is generated
-- **THEN** a daily product order for that client+product is created with
-  quantity 8, a day equal to the generation date, and a reference to the
-  chosen route
+- **THEN** two daily product orders are created for that route: "Queso"
+  with quantity 20 and "Crema" with quantity 5, each with a day equal to
+  the generation date
 
-#### Scenario: Delivered and canceled pending products are not counted
+#### Scenario: Pending products are not counted
 
-- **GIVEN** a client that is a stop of the chosen route has a default
-  quantity of 5 for a product, a pending product of quantity 3 in
-  `delivered` state, and a pending product of quantity 2 in `canceled`
-  state for that client+product
+- **GIVEN** the chosen route has a default quantity of 20 for a product,
+  and a client that is a stop of that route has a pending product of
+  quantity 3 for that same product in `pending` state
 - **WHEN** the route is generated
-- **THEN** the resulting daily product order for that client+product has
-  quantity 5
+- **THEN** the route's daily product order for that product has quantity 20
 
-#### Scenario: A client+product with nothing due produces no record
+#### Scenario: A product with no default produces no record
 
-- **GIVEN** a client that is a stop of the chosen route has no default
-  quantity and no `pending`-state pending products for a given product
+- **GIVEN** the chosen route has no default quantity for a product
 - **WHEN** the route is generated
-- **THEN** no daily product order is created for that client+product
+- **THEN** no daily product order is created for that product
 
-#### Scenario: Clients that are not stops of the chosen route are not included
+#### Scenario: Other routes' defaults are not included
 
-- **GIVEN** a client in the chosen route's zone has a default quantity of 5
-  for a product but is not a stop of the chosen route
+- **GIVEN** "Ruta 1" has a default quantity of 20 for a product and
+  "Ruta 2" of the same zone has a default quantity of 7 for that product
+- **WHEN** "Ruta 1" is generated
+- **THEN** "Ruta 1"'s batch contains one daily product order of quantity 20
+  for that product and no order of quantity 7
+
+#### Scenario: A route with no defaults produces an empty batch
+
+- **GIVEN** the chosen route has no default product quantities
 - **WHEN** the route is generated
-- **THEN** no daily product order is created for that client
-
-#### Scenario: A client on several routes is included in each route's batch
-
-- **GIVEN** a client with a default quantity of 5 for a product is a stop of
-  both "Ruta 1" and "Ruta 2" in the same zone
-- **WHEN** "Ruta 1" and then "Ruta 2" are generated on the same day
-- **THEN** each route's batch contains a daily product order of quantity 5
-  for that client+product
-
-#### Scenario: Clients and products outside the chosen zone are not included
-
-- **GIVEN** a client belongs to a different zone than the chosen route's zone
-- **WHEN** the route is generated
-- **THEN** no daily product order is created for that other client
+- **THEN** no daily product order is created for that route
 
 #### Scenario: Generating without choosing a zone is rejected
 
@@ -127,12 +113,20 @@ routes, including other routes of the same zone, SHALL NOT be affected.
 #### Scenario: Regenerating replaces the previous totals
 
 - **GIVEN** a route was generated today, producing a daily product order of
-  quantity 5 for a client+product
-- **WHEN** that client's default quantity is changed and the same route is
-  generated again today
-- **THEN** the client+product's daily product order for today on that route
+  quantity 5 for a product
+- **WHEN** that route's default quantity for the product is changed and the
+  same route is generated again today
+- **THEN** the product's daily product order for today on that route
   reflects only the newly computed quantity, with no leftover record from
   the first generation
+
+#### Scenario: Removing a default and regenerating drops its order
+
+- **GIVEN** a route was generated today, producing a daily product order
+  for a product
+- **WHEN** that route's default quantity for the product is deleted and the
+  same route is generated again today
+- **THEN** that route has no daily product order for that product today
 
 #### Scenario: Other days' batches are unaffected
 
@@ -159,7 +153,7 @@ regenerated is listed at the top.
 #### Scenario: Each generated batch appears once
 
 - **GIVEN** a route was generated today, producing daily product orders for
-  three different client+product combinations
+  three different products
 - **WHEN** the index is viewed
 - **THEN** exactly one row is shown for today's generation of that route,
   showing today's date, the route's zone name, and the route's name
@@ -190,19 +184,16 @@ regenerated is listed at the top.
 - **WHEN** "Ruta A" is generated again today and the index is shown
 - **THEN** the "Ruta A" batch is listed above the "Ruta B" batch
 
-### Requirement: Consolidated spreadsheet download
+### Requirement: Consolidated route spreadsheet download
 
 Downloading a batch's consolidated spreadsheet SHALL produce a spreadsheet
 file containing: a table with one row for every client that is a stop of
-the batch's route, ordered by that client's route stop position — regardless
-of whether that client has a daily product order in the batch — showing the
-client's name, address, and location URL as a clickable link, followed by
-that client's currently-`pending`-state pending products (if any), each
-shown as "<product name>: <quantity>" in its own column; and, below that
-table, a second table listing every product that appears in the batch with
-the batch's total quantity for that product across all its clients.
-Clients of the zone that are not stops of the batch's route SHALL NOT
-appear in the client table.
+the batch's route, ordered by that client's route stop position, showing
+the client's name, address, and location URL as a clickable link; and,
+below that table, a second table listing every product that appears in the
+batch with the batch's quantity for that product. The spreadsheet SHALL NOT
+show pending products. Clients of the zone that are not stops of the
+batch's route SHALL NOT appear in the client table.
 
 #### Scenario: Client rows follow the route stop order
 
@@ -219,41 +210,22 @@ appear in the client table.
 - **WHEN** the batch's consolidated spreadsheet is downloaded
 - **THEN** that client has no row in the client table
 
-#### Scenario: Client rows show contact info and current pending items
+#### Scenario: Client rows show contact info only
 
-- **GIVEN** a generated batch's route has a stop for a client with a daily
-  product order, and that client currently has two pending products in
-  `pending` state
+- **GIVEN** a generated batch's route has a stop for a client that
+  currently has two pending products in `pending` state
 - **WHEN** the batch's consolidated spreadsheet is downloaded
 - **THEN** the client's row shows their name, address, and location URL as
   a clickable link
-- **AND** each of the two pending products appears as "<product name>:
-  <quantity>" in its own column on that row
+- **AND** the row has no other columns, and no pending product appears
+  anywhere in the spreadsheet
 
-#### Scenario: A client with no current pending products has no pending columns
+#### Scenario: Product totals list the batch's quantities
 
-- **GIVEN** a generated batch's route has a stop for a client with a daily
-  product order, and that client currently has no pending products in
-  `pending` state
+- **GIVEN** a generated batch has a daily product order of quantity 20 for
+  "Queso" and of quantity 5 for "Crema"
 - **WHEN** the batch's consolidated spreadsheet is downloaded
-- **THEN** that client's row shows no pending product columns
-
-#### Scenario: A client with nothing due still appears in the client table
-
-- **GIVEN** a client is a stop of the batch's route but has no default
-  quantity, no `pending`-state pending products, and no daily product
-  order in the batch
-- **WHEN** the batch's consolidated spreadsheet is downloaded
-- **THEN** that client still has a row at its stop position, showing their
-  name, address, and location URL, with no pending product columns
-
-#### Scenario: Product totals sum across the batch's clients
-
-- **GIVEN** a generated batch has one client with a daily product order of
-  quantity 4 for a product and another client with a daily product order
-  of quantity 3 for that same product
-- **WHEN** the batch's consolidated spreadsheet is downloaded
-- **THEN** the product totals table shows a quantity of 7 for that product
+- **THEN** the product totals table shows "Crema" with 5 and "Queso" with 20
 
 #### Scenario: Product totals only include the batch's route
 
@@ -266,9 +238,9 @@ appear in the client table.
 #### Scenario: The consolidated totals reflect the generated batch, not live data
 
 - **GIVEN** a batch was generated with a daily product order of quantity 5
-  for a client+product
-- **WHEN** that client's default quantity is changed afterward, and the
-  batch's consolidated spreadsheet is then downloaded
+  for a product
+- **WHEN** the route's default quantity for that product is changed
+  afterward, and the batch's consolidated spreadsheet is then downloaded
 - **THEN** the product totals table still shows the quantity of 5 that was
   generated, unaffected by the later change
 

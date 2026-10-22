@@ -12,9 +12,9 @@ es:
     clients: "Clientes"
     routes: "Rutas"
     products: "Productos"
-    products_default: "Default"
-    products_pending: "Pendientes"
-    products_daily_order: "Orden Diaria"
+    routes_default: "Default"
+    pending_products: "Pendientes"
+    daily_product_orders: "Orden Diaria"
   layouts:
     header:
       change_password: "Cambiar contraseña"
@@ -200,10 +200,8 @@ es:
     index:
       title: "Default"
       new_button: "Crear default"
-      table_client: "Cliente"
       table_zone: "Zona"
-      filter_client_label: "Cliente"
-      filter_client_placeholder: "Buscar por cliente"
+      table_route: "Ruta"
       no_results: "No hay registros que coincidan con los filtros."
       table_product: "Producto"
       table_quantity: "Cantidad"
@@ -214,10 +212,10 @@ es:
       title: "Nuevo default"
     edit:
       title: "Editar default"
-    client_panel:
-      choose_client: "Selecciona una zona y un cliente para ver sus defaults."
-      heading: "Defaults Cliente %{name}"
-      empty: "Este cliente no tiene defaults."
+    route_panel:
+      choose_route: "Selecciona una zona y una ruta para ver sus defaults."
+      heading: "Defaults Ruta %{name}"
+      empty: "Esta ruta no tiene defaults."
       col_product: "Producto"
       col_quantity: "Cantidad"
       col_actions: "Acciones"
@@ -227,7 +225,8 @@ es:
     form:
       zone_label: "Zona"
       zone_placeholder: "Selecciona una zona"
-      client_label: "Cliente"
+      route_label: "Ruta"
+      route_placeholder: "Selecciona una ruta"
       product_label: "Producto"
       product_placeholder: "Selecciona un producto"
       quantity_label: "Cantidad"

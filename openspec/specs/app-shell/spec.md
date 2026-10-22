@@ -28,12 +28,14 @@ rendered without the shell.
 - **WHEN** the login page is rendered
 - **THEN** no sidebar or header is displayed
 
-### Requirement: Top-level navigation entries
+### Requirement: Sidebar top-level entries
 
-The sidebar SHALL list, in order, a "Zonas" entry linking to the zone
-index, a "Clientes" entry linking to the client index, a "Rutas" entry
-linking to the route index, and a "Productos" entry that is not itself a
-link.
+The sidebar SHALL list, in order, a "Zonas" entry linking to the zone index,
+a "Clientes" entry linking to the client index, a "Rutas" entry that is not
+itself a link, a "Productos" entry linking to the product index, a
+"Pendientes" entry linking to the pending product index, and an "Orden
+Diaria" entry linking to the daily product order index. "Productos",
+"Pendientes" and "Orden Diaria" SHALL NOT reveal any submenu.
 
 #### Scenario: Zonas and Clientes navigate to their sections
 
@@ -42,81 +44,97 @@ link.
 - **WHEN** the "Clientes" entry is activated
 - **THEN** the client index is displayed
 
-#### Scenario: Rutas navigates to the route index
-
-- **WHEN** the "Rutas" entry is activated
-- **THEN** the route index is displayed
-
-#### Scenario: Productos entry has no direct destination
+#### Scenario: Entries are listed in order
 
 - **WHEN** the sidebar is rendered
-- **THEN** the "Productos" entry is displayed
+- **THEN** its top-level entries are "Zonas", "Clientes", "Rutas",
+  "Productos", "Pendientes", and "Orden Diaria", in that order
+
+#### Scenario: Rutas entry has no direct destination
+
+- **WHEN** the sidebar is rendered
+- **THEN** the "Rutas" entry is displayed
 - **AND** it does not navigate to any page on its own
 
-### Requirement: Productos submenu on hover
+#### Scenario: Productos navigates to the product index
 
-The system SHALL reveal a submenu when the pointer hovers over the
-"Productos" entry, listing four entries in order: "Productos", "Default",
-"Pendientes", and "Orden Diaria". Every submenu entry SHALL be a link —
-"Productos" to the product index, "Default" to the default product
-quantity index, "Pendientes" to the pending product index, and "Orden
-Diaria" to the daily product order index.
+- **WHEN** the "Productos" entry is activated
+- **THEN** the product index is displayed
 
-#### Scenario: Hovering Productos reveals its submenu
+#### Scenario: Pendientes navigates to the pending product index
+
+- **WHEN** the "Pendientes" entry is activated
+- **THEN** the pending product index is displayed
+
+#### Scenario: Orden Diaria navigates to the daily product order index
+
+- **WHEN** the "Orden Diaria" entry is activated
+- **THEN** the daily product order index is displayed
+
+#### Scenario: Productos has no submenu
 
 - **WHEN** the pointer hovers over the "Productos" entry
-- **THEN** a submenu is displayed listing "Productos", "Default",
-  "Pendientes", and "Orden Diaria", in that order
+- **THEN** no submenu is displayed
 
-#### Scenario: Productos submenu entry navigates to the product index
+### Requirement: Rutas submenu on hover
 
-- **WHEN** the "Productos" submenu entry is activated
-- **THEN** the product index is displayed
+The system SHALL reveal a submenu when the pointer hovers over the "Rutas"
+entry, listing two entries in order: "Rutas" and "Default". Every submenu
+entry SHALL be a link: "Rutas" to the route index and "Default" to the
+default product quantity index.
+
+#### Scenario: Hovering Rutas reveals its submenu
+
+- **WHEN** the pointer hovers over the "Rutas" entry
+- **THEN** a submenu is displayed listing "Rutas" and "Default", in that order
+
+#### Scenario: Rutas submenu entry navigates to the route index
+
+- **WHEN** the "Rutas" submenu entry is activated
+- **THEN** the route index is displayed
 
 #### Scenario: Default submenu entry navigates to the default product quantity index
 
 - **WHEN** the "Default" submenu entry is activated
 - **THEN** the default product quantity index is displayed
 
-#### Scenario: Pendientes submenu entry navigates to the pending product index
-
-- **WHEN** the "Pendientes" submenu entry is activated
-- **THEN** the pending product index is displayed
-
-#### Scenario: Orden Diaria submenu entry navigates to the daily product order index
-
-- **WHEN** the "Orden Diaria" submenu entry is activated
-- **THEN** the daily product order index is displayed
-
-#### Scenario: Submenu entries are inert
-
-- **WHEN** the Productos submenu is displayed
-- **THEN** none of its entries are inert — each one navigates to a page
-  when activated
-
 ### Requirement: Active section highlighting
 
-The sidebar SHALL visually distinguish the top-level entry ("Zonas",
-"Clientes", or "Rutas") matching the page currently being viewed from the
-other entries.
+The sidebar SHALL visually distinguish the top-level entry matching the page
+currently being viewed from the other entries. The "Rutas" entry SHALL be
+highlighted on both the route index and the default product quantity pages.
 
 #### Scenario: Viewing the zone index highlights Zonas
 
 - **WHEN** the zone index is displayed
 - **THEN** the "Zonas" entry is shown in its highlighted (active) state
-- **AND** the "Clientes" and "Rutas" entries are not
+- **AND** no other top-level entry is
 
 #### Scenario: Viewing the client index highlights Clientes
 
 - **WHEN** the client index is displayed
 - **THEN** the "Clientes" entry is shown in its highlighted (active) state
-- **AND** the "Zonas" and "Rutas" entries are not
+- **AND** no other top-level entry is
 
 #### Scenario: Viewing the route index highlights Rutas
 
 - **WHEN** the route index is displayed
 - **THEN** the "Rutas" entry is shown in its highlighted (active) state
-- **AND** the "Zonas" and "Clientes" entries are not
+- **AND** no other top-level entry is
+
+#### Scenario: Viewing the default product quantity index highlights Rutas
+
+- **WHEN** the default product quantity index is displayed
+- **THEN** the "Rutas" entry is shown in its highlighted (active) state
+- **AND** no other top-level entry is
+
+#### Scenario: Viewing the product, pending product or daily order index highlights its entry
+
+- **WHEN** the product index, the pending product index, or the daily
+  product order index is displayed
+- **THEN** the matching entry ("Productos", "Pendientes", or "Orden
+  Diaria") is shown in its highlighted (active) state
+- **AND** no other top-level entry is
 
 ### Requirement: Signed-in account controls in the header
 

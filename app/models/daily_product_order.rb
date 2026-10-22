@@ -2,7 +2,6 @@ class DailyProductOrder < ApplicationRecord
   include Filterable
 
   belongs_to :product
-  belongs_to :client
   belongs_to :zone
   belongs_to :route
 

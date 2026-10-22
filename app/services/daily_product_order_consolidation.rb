@@ -1,5 +1,5 @@
 class DailyProductOrderConsolidation
-  FIXED_HEADERS = %w[Cliente Dirección Ubicación].freeze
+  CLIENT_HEADERS = %w[Cliente Dirección Ubicación].freeze
 
   def initialize(route:, day:)
     @route = route
@@ -20,12 +20,8 @@ class DailyProductOrderConsolidation
   end
 
   def add_client_table(sheet)
-    clients = @route.route_stops.includes(:client).map(&:client)
-    pending_by_client = clients.index_with { |client| current_pending_products(client) }
-    max_pending = pending_by_client.values.map(&:size).max || 0
-
-    sheet.add_row(FIXED_HEADERS + pending_headers(max_pending))
-    clients.each { |client| add_client_row(sheet, client, pending_by_client[client], max_pending) }
+    sheet.add_row(CLIENT_HEADERS)
+    @route.route_stops.includes(:client).map(&:client).each { |client| add_client_row(sheet, client) }
   end
 
   def add_product_totals(sheet, orders)
@@ -35,42 +31,13 @@ class DailyProductOrderConsolidation
   end
 
   def batch_orders
-    DailyProductOrder.where(route: @route, day: @day).includes(:client, :product)
+    DailyProductOrder.where(route: @route, day: @day).includes(:product)
   end
 
-  def current_pending_products(client)
-    client.pending_products.where(state: :pending).includes(:product).order(:created_at)
-  end
-
-  def pending_headers(count)
-    (1..count).map { |n| "Pendiente #{n}" }
-  end
-
-  def add_client_row(sheet, client, pending_products, max_pending)
-    values, escape_formulas = client_row(client, pending_products, max_pending)
-    sheet.add_row(values, escape_formulas: escape_formulas)
-  end
-
-  def client_row(client, pending_products, max_pending)
+  def add_client_row(sheet, client)
     location_formula = client.url.present?
-    values = [client.name, client.address, location_value(client, location_formula)]
-    escape_formulas = [true, true, !location_formula]
-
-    append_pending_cells(values, escape_formulas, pending_products, max_pending)
-
-    [values, escape_formulas]
-  end
-
-  def append_pending_cells(values, escape_formulas, pending_products, max_pending)
-    pending_products.each do |pending_product|
-      values << "#{pending_product.product.name}: #{pending_product.quantity}"
-      escape_formulas << true
-    end
-
-    (pending_products.size...max_pending).each do
-      values << nil
-      escape_formulas << true
-    end
+    sheet.add_row([client.name, client.address, location_value(client, location_formula)],
+                  escape_formulas: [true, true, !location_formula])
   end
 
   def location_value(client, formula)

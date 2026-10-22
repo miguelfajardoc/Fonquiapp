@@ -6,87 +6,72 @@ RSpec.describe DailyProductOrderGeneration do
     let(:route) { create(:route, zone: zone) }
     let(:product) { create(:product) }
 
-    def stop_client(on_route = route)
-      create(:client, zone: on_route.zone).tap { |client| create(:route_stop, route: on_route, client: client) }
+    def quantities(on_route = route)
+      DailyProductOrder.where(route: on_route).joins(:product).pluck("products.name", :quantity).to_h
     end
 
-    it "combines a stop client+product's default quantity and pending quantity, stamped with the route" do
-      client = stop_client
-      create(:default_product_quantity, zone: zone, client: client, product: product, quantity: 5)
+    it "creates one order per route default with its quantity, stamped with the day, route and zone" do
+      create(:default_product_quantity, route: route, product: create(:product, name: "Queso"), quantity: 20)
+      create(:default_product_quantity, route: route, product: create(:product, name: "Crema"), quantity: 5)
+
+      described_class.new(route: route).call
+
+      expect(quantities).to eq("Queso" => 20, "Crema" => 5)
+      expect(DailyProductOrder.where(route: route).pluck(:day, :zone_id).uniq).to eq([[Date.current, zone.id]])
+    end
+
+    it "does not count pending products" do
+      client = create(:client, zone: zone)
+      create(:route_stop, route: route, client: client)
+      create(:default_product_quantity, route: route, product: product, quantity: 20)
       create(:pending_product, zone: zone, client: client, product: product, quantity: 3, state: :pending)
 
       described_class.new(route: route).call
 
-      order = DailyProductOrder.find_by(route: route, client: client, product: product)
-      expect(order.quantity).to eq(8)
-      expect(order.day).to eq(Date.current)
-      expect(order.zone).to eq(zone)
+      expect(DailyProductOrder.find_by(route: route, product: product).quantity).to eq(20)
     end
 
-    it "does not count delivered or canceled pending products" do
-      client = stop_client
-      create(:default_product_quantity, zone: zone, client: client, product: product, quantity: 5)
-      create(:pending_product, zone: zone, client: client, product: product, quantity: 3, state: :delivered)
-      create(:pending_product, zone: zone, client: client, product: product, quantity: 2, state: :canceled)
+    it "creates no record for a product the route has no default for" do
+      create(:default_product_quantity, route: route, product: product, quantity: 20)
+      other_product = create(:product)
 
       described_class.new(route: route).call
 
-      expect(DailyProductOrder.find_by(route: route, client: client, product: product).quantity).to eq(5)
+      expect(DailyProductOrder.where(route: route, product: other_product)).to be_empty
     end
 
-    it "creates no record for a stop client+product with nothing due" do
-      stop_client
-      product
+    it "does not include other routes' defaults" do
+      other_route = create(:route, zone: zone)
+      create(:default_product_quantity, route: route, product: product, quantity: 20)
+      create(:default_product_quantity, route: other_route, product: product, quantity: 7)
 
+      described_class.new(route: route).call
+
+      expect(DailyProductOrder.where(route: route).pluck(:quantity)).to eq([20])
+    end
+
+    it "creates an empty batch for a route with no defaults" do
       expect { described_class.new(route: route).call }.not_to change(DailyProductOrder, :count)
     end
 
-    it "does not include zone clients that are not stops of the route" do
-      off_route_client = create(:client, zone: zone)
-      create(:default_product_quantity, zone: zone, client: off_route_client, product: product, quantity: 5)
-      create(:pending_product, zone: zone, client: off_route_client, product: product, quantity: 2, state: :pending)
-
-      described_class.new(route: route).call
-
-      expect(DailyProductOrder.where(client: off_route_client)).to be_empty
-    end
-
-    it "does not include clients from another zone" do
-      other_zone = create(:zone)
-      other_client = create(:client, zone: other_zone)
-      create(:default_product_quantity, zone: other_zone, client: other_client, product: product, quantity: 4)
-
-      described_class.new(route: route).call
-
-      expect(DailyProductOrder.where(client: other_client)).to be_empty
-    end
-
-    it "includes a client that is a stop of two routes in each route's batch" do
-      other_route = create(:route, zone: zone)
-      client = stop_client
-      create(:route_stop, route: other_route, client: client)
-      create(:default_product_quantity, zone: zone, client: client, product: product, quantity: 5)
-
-      described_class.new(route: route).call
-      described_class.new(route: other_route).call
-
-      expect(DailyProductOrder.find_by(route: route, client: client, product: product).quantity).to eq(5)
-      expect(DailyProductOrder.find_by(route: other_route, client: client, product: product).quantity).to eq(5)
-    end
-
     it "replaces the existing batch when the same route is regenerated the same day" do
-      client = stop_client
-      default_quantity = create(:default_product_quantity, zone: zone, client: client, product: product, quantity: 5)
+      default_quantity = create(:default_product_quantity, route: route, product: product, quantity: 5)
 
       described_class.new(route: route).call
-      expect(DailyProductOrder.find_by(route: route, client: client, product: product).quantity).to eq(5)
-
       default_quantity.update!(quantity: 9)
       described_class.new(route: route).call
 
-      orders = DailyProductOrder.where(route: route, client: client, product: product)
-      expect(orders.count).to eq(1)
-      expect(orders.first.quantity).to eq(9)
+      expect(DailyProductOrder.where(route: route, product: product).pluck(:quantity)).to eq([9])
+    end
+
+    it "drops a product whose default was deleted when regenerating the same day" do
+      default_quantity = create(:default_product_quantity, route: route, product: product, quantity: 5)
+
+      described_class.new(route: route).call
+      default_quantity.destroy!
+      described_class.new(route: route).call
+
+      expect(DailyProductOrder.where(route: route, product: product)).to be_empty
     end
 
     it "leaves a different day's batch for the same route untouched" do

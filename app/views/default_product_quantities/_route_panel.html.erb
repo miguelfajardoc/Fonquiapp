@@ -1,0 +1,9 @@
+<% if selected_route %>
+  <h2 class="text-lg font-semibold text-text">
+    <%= t("default_product_quantities.route_panel.heading", name: selected_route.name) %>
+  </h2>
+  <%= render "default_product_quantities/route_default_list", route: selected_route,
+                                                              default_product_quantities: route_defaults %>
+<% else %>
+  <p class="text-sm text-text-muted"><%= t("default_product_quantities.route_panel.choose_route") %></p>
+<% end %>

@@ -1,16 +1,49 @@
 require "rails_helper"
 
 RSpec.describe "App shell", type: :request do
+  # Top-level sidebar entries in order: links directly under the nav, plus the Rutas group header.
+  def top_level_entries
+    response.parsed_body.at_css("aside nav").element_children.map do |element|
+      element.name == "a" ? element : element.element_children.first
+    end
+  end
+
+  def entry(label)
+    top_level_entries.find { |element| element.text.strip == label }
+  end
+
+  def highlighted_entries
+    top_level_entries.select { |element| element["class"].include?("text-accent") }.map { |e| e.text.strip }
+  end
+
   describe "sidebar and header" do
-    it "renders the brand label and the Zonas/Clientes/Rutas links on the zone index" do
+    it "renders the brand label and the top-level entries in order" do
       get zones_path
 
       expect(response.body).to include("Fonquilac")
-      links = response.parsed_body.css("a")
+      expect(top_level_entries.map { |element| element.text.strip })
+        .to eq(["Zonas", "Clientes", "Rutas", "Productos", "Pendientes", "Orden Diaria"])
+    end
 
-      expect(links.find { |a| a.text.strip == "Zonas" }["href"]).to eq(zones_path)
-      expect(links.find { |a| a.text.strip == "Clientes" }["href"]).to eq(clients_path)
-      expect(links.find { |a| a.text.strip == "Rutas" }["href"]).to eq(routes_path)
+    it "links Zonas, Clientes, Productos, Pendientes and Orden Diaria to their indexes" do
+      get zones_path
+
+      expect(entry("Zonas")["href"]).to eq(zones_path)
+      expect(entry("Clientes")["href"]).to eq(clients_path)
+      expect(entry("Productos")["href"]).to eq(products_path)
+      expect(entry("Pendientes")["href"]).to eq(pending_products_path)
+      expect(entry("Orden Diaria")["href"]).to eq(daily_product_orders_path)
+    end
+
+    it "makes Rutas a non-link group whose hover submenu lists Rutas and Default" do
+      get zones_path
+
+      expect(entry("Rutas").name).not_to eq("a")
+      submenu = response.parsed_body.css("aside nav div.hidden.group-hover\\:flex")
+      expect(submenu.size).to eq(1)
+      links = submenu.first.css("a")
+      expect(links.map { |a| a.text.strip }).to eq(%w[Rutas Default])
+      expect(links.pluck("href")).to eq([routes_path, default_product_quantities_path])
     end
 
     it "shows the page title in the header on the zone and client index" do
@@ -21,60 +54,15 @@ RSpec.describe "App shell", type: :request do
       expect(response.parsed_body.at_css("header").text).to include("Clientes")
     end
 
-    it "highlights Zonas but not Clientes or Rutas on the zone index" do
-      get zones_path
-      doc = response.parsed_body
+    {
+      "zones" => "Zonas", "clients" => "Clientes", "routes" => "Rutas", "default_product_quantities" => "Rutas",
+      "products" => "Productos", "pending_products" => "Pendientes", "daily_product_orders" => "Orden Diaria"
+    }.each do |section, label|
+      it "highlights only #{label} on the #{section} index" do
+        get public_send("#{section}_path")
 
-      zonas_link = doc.css("a").find { |a| a.text.strip == "Zonas" }
-      clientes_link = doc.css("a").find { |a| a.text.strip == "Clientes" }
-      rutas_link = doc.css("a").find { |a| a.text.strip == "Rutas" }
-
-      expect(zonas_link["class"]).to include("text-accent")
-      expect(clientes_link["class"]).not_to include("text-accent")
-      expect(rutas_link["class"]).not_to include("text-accent")
-    end
-
-    it "highlights Clientes but not Zonas or Rutas on the client index" do
-      get clients_path
-      doc = response.parsed_body
-
-      zonas_link = doc.css("a").find { |a| a.text.strip == "Zonas" }
-      clientes_link = doc.css("a").find { |a| a.text.strip == "Clientes" }
-      rutas_link = doc.css("a").find { |a| a.text.strip == "Rutas" }
-
-      expect(clientes_link["class"]).to include("text-accent")
-      expect(zonas_link["class"]).not_to include("text-accent")
-      expect(rutas_link["class"]).not_to include("text-accent")
-    end
-
-    it "highlights Rutas but not Zonas or Clientes on the route index" do
-      get routes_path
-      doc = response.parsed_body
-
-      zonas_link = doc.css("a").find { |a| a.text.strip == "Zonas" }
-      clientes_link = doc.css("a").find { |a| a.text.strip == "Clientes" }
-      rutas_link = doc.css("a").find { |a| a.text.strip == "Rutas" }
-
-      expect(rutas_link["class"]).to include("text-accent")
-      expect(zonas_link["class"]).not_to include("text-accent")
-      expect(clientes_link["class"]).not_to include("text-accent")
-    end
-
-    it "lists Productos submenu entries in order, all linking to their indexes" do
-      get zones_path
-      doc = response.parsed_body
-
-      submenu_items = doc.css("div.hidden > a")
-      expect(submenu_items.map { |el| el.text.strip }).to eq(
-        ["Productos", "Default", "Pendientes", "Orden Diaria"]
-      )
-
-      productos_entry, default_entry, pendientes_entry, orden_diaria_entry = submenu_items
-
-      expect(productos_entry["href"]).to eq(products_path)
-      expect(default_entry["href"]).to eq(default_product_quantities_path)
-      expect(pendientes_entry["href"]).to eq(pending_products_path)
-      expect(orden_diaria_entry["href"]).to eq(daily_product_orders_path)
+        expect(highlighted_entries).to eq([label])
+      end
     end
   end
 end
