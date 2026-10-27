@@ -12,6 +12,20 @@ RSpec.describe Client, type: :model do
       expect(client.errors[:name]).to be_present
     end
 
+    it "is invalid with a name already used by another client, in any zone, ignoring case and accents" do
+      create(:client, name: "Tienda San José")
+      client = build(:client, name: " tienda san jose ", zone: create(:zone))
+
+      expect(client).not_to be_valid
+      expect(client.errors[:name]).to include("has already been taken")
+    end
+
+    it "keeps its own name when updated" do
+      client = create(:client, name: "Tienda San José")
+
+      expect(client.update(phone: "3001234567", name: "Tienda San José")).to be(true)
+    end
+
     it "is invalid without a zone" do
       client = build(:client, zone: nil)
       expect(client).not_to be_valid

@@ -11,10 +11,13 @@ class Client < ApplicationRecord
   validates :latitude, numericality: { in: -90..90 }, allow_nil: true
   validates :longitude, numericality: { in: -180..180 }, allow_nil: true
   validate :coordinates_complete
+  validate :name_not_taken
 
   # The location link always mirrors the saved location, so it is never typed by hand.
   before_save :derive_url
 
+  # Exact match on name, ignoring case, accents and surrounding spaces.
+  scope :named, ->(name) { where("lower(unaccent(clients.name)) = lower(unaccent(?))", name.to_s.strip) }
   # Contains match on name, ignoring case and accents; typed text is matched literally.
   scope :filter_by_name, ->(name) { where_unaccent_contains("clients.name", name) }
   scope :filter_by_zone_id, ->(zone_id) { where(zone_id: zone_id) }
@@ -43,6 +46,13 @@ class Client < ApplicationRecord
     return if latitude.present? == longitude.present?
 
     errors.add(latitude.present? ? :longitude : :latitude, :blank)
+  end
+
+  # Names are unique across the app, so "Tienda San José" and "tienda san jose" are the same client.
+  def name_not_taken
+    return if name.blank?
+
+    errors.add(:name, :taken) if Client.named(name).where.not(id: id).exists?
   end
 
   def derive_url

@@ -34,7 +34,9 @@ can be referred to unambiguously.
 ### Requirement: Client record
 
 The system SHALL persist a client as a record with a name and optional
-contact details. The name SHALL be present (non-blank). The fields
+contact details. The name SHALL be present (non-blank) and SHALL NOT match
+the name of any other client, comparing names ignoring letter case and
+accents. The fields
 `address` and `phone` SHALL each be optional free text. The client SHALL
 also have an optional location made of `latitude` and `longitude`, and a
 `url` that the system derives from that location and the address (it is not
@@ -53,6 +55,20 @@ referential integrity.
 - **WHEN** a client is created with a blank or missing `name`
 - **THEN** the client is not persisted
 - **AND** a validation error is reported against `name`
+
+#### Scenario: Client rejected with a name already used by another client
+
+- **GIVEN** a client named "Tienda San José" exists
+- **WHEN** another client is created, in any zone, with the name
+  "tienda san jose"
+- **THEN** the client is not persisted
+- **AND** a validation error is reported against `name`
+
+#### Scenario: A client keeps its own name when updated
+
+- **GIVEN** a client named "Tienda San José" exists
+- **WHEN** that same client is updated with a new phone and the same name
+- **THEN** the update is persisted
 
 #### Scenario: Client rejected without a zone
 

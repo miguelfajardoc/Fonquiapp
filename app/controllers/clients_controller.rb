@@ -1,4 +1,6 @@
 class ClientsController < ApplicationController
+  include CsvImporting
+
   FILTER_KEYS = %i[name zone_id route_id].freeze
 
   before_action :set_client, only: %i[show edit update destroy]
@@ -34,6 +36,10 @@ class ClientsController < ApplicationController
     else
       render :edit, status: :unprocessable_content
     end
+  end
+
+  def import
+    run_csv_import(ClientCsvImport, index_path: clients_path, notice_key: "clients.flash.imported")
   end
 
   def destroy

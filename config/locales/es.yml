@@ -41,6 +41,18 @@ es:
     flash:
       invalid_credentials: "Correo o contraseña incorrectos."
       rate_limited: "Demasiados intentos. Intenta de nuevo más tarde."
+  csv_import:
+    failure_line: "Fila %{line}: %{message}"
+    more_failures:
+      one: "Y 1 fila más con errores."
+      other: "Y %{count} filas más con errores."
+    errors:
+      missing_file: "Selecciona un archivo CSV para cargar."
+      too_large: "El archivo supera el tamaño máximo de 2 MB."
+      malformed: "El archivo no es un CSV válido (%{detail})."
+      missing_columns: "Al archivo le faltan las columnas: %{columns}."
+      missing_values: "falta %{columns}"
+      invalid_price: "precio inválido (%{price})"
   shared:
     confirm_dialog:
       confirm_question_prefix: "¿Estás seguro que deseas eliminar"
@@ -81,6 +93,7 @@ es:
     index:
       title: "Clientes"
       new_button: "Crear cliente"
+      import_button: "Cargar clientes"
       table_name: "Nombre"
       table_address: "Dirección"
       table_url: "Ubicación"
@@ -135,6 +148,7 @@ es:
       created: "Cliente creado."
       updated: "Cliente actualizado."
       deleted: "Cliente eliminado."
+      imported: "Clientes creados: %{created}."
   routes:
     index:
       title: "Rutas"
@@ -171,6 +185,7 @@ es:
     index:
       title: "Productos"
       new_button: "Crear producto"
+      import_button: "Cargar productos"
       table_name: "Nombre"
       table_price: "Precio"
       table_actions: "Acciones"
@@ -196,6 +211,7 @@ es:
       created: "Producto creado."
       updated: "Producto actualizado."
       deleted: "Producto eliminado."
+      imported: "Productos creados: %{created}. Productos actualizados: %{updated}."
   default_product_quantities:
     index:
       title: "Default"

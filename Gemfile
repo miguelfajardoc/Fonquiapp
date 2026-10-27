@@ -29,6 +29,8 @@ gem "hotwire_combobox"
 gem "caxlsx"
 # Manage ordered lists scoped to a parent record [https://github.com/brendon/acts_as_list]
 gem "acts_as_list"
+# Read uploaded CSV files (a bundled gem since Ruby 3.4) [https://github.com/ruby/csv]
+gem "csv"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 gem "bcrypt", "~> 3.1.7"

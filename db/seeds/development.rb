@@ -6,8 +6,12 @@ CLIENT_NAME_SUFFIXES = ["La Esperanza", "El Paisa", "San José", "La 42", "Doña
                         "Santa Fe"].freeze
 STREET_TYPES = %w[Calle Carrera Avenida].freeze
 
-def random_client_name
-  "#{CLIENT_NAME_PREFIXES.sample} #{CLIENT_NAME_SUFFIXES.sample}"
+# Client names are unique across the app, so draw them from the combinations no client uses yet.
+def unused_client_names
+  taken = Client.pluck(:name)
+  CLIENT_NAME_PREFIXES.product(CLIENT_NAME_SUFFIXES).map { |parts| parts.join(" ") }.shuffle.reject do |name|
+    taken.include?(name)
+  end
 end
 
 def random_bogota_address
@@ -23,10 +27,11 @@ products = ["Queso", "Suero", "Mantequilla", "Crema de leche"].map do |name|
 end
 
 # --- Clients (2 per zone, topped up rather than re-keyed since names are random) ---
+client_names = unused_client_names
 zones.each do |zone|
   (2 - zone.clients.count).times do
     zone.clients.create!(
-      name: random_client_name,
+      name: client_names.pop,
       address: random_bogota_address,
       phone: Faker::PhoneNumber.phone_number
     )

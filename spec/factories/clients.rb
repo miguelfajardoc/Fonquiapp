@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :client do
     association :zone
-    name { Faker::Company.name }
+    sequence(:name) { |n| "#{Faker::Company.name} #{n}" }
     address { Faker::Address.full_address }
     phone { Faker::PhoneNumber.phone_number }
   end

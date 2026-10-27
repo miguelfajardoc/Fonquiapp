@@ -1,0 +1,8 @@
+<%# Button that opens the native file picker; choosing a .csv file submits it right away (auto-submit). %>
+<%= form_with url: path, method: :post, multipart: true, class: "flex", data: { controller: "auto-submit" } do %>
+  <label class="flex h-11 cursor-pointer items-center rounded border border-border px-5 text-sm font-semibold text-text
+                focus-within:ring-2 focus-within:ring-accent">
+    <%= label %>
+    <input type="file" name="file" accept=".csv,text/csv" class="sr-only" data-action="change->auto-submit#submit">
+  </label>
+<% end %>

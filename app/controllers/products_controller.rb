@@ -1,4 +1,6 @@
 class ProductsController < ApplicationController
+  include CsvImporting
+
   FILTER_KEYS = %i[name].freeze
 
   before_action :set_product, only: %i[edit update destroy]
@@ -30,6 +32,10 @@ class ProductsController < ApplicationController
     else
       render :edit, status: :unprocessable_content
     end
+  end
+
+  def import
+    run_csv_import(ProductCsvImport, index_path: products_path, notice_key: "products.flash.imported")
   end
 
   def destroy

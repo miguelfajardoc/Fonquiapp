@@ -33,7 +33,11 @@ RSpec.describe "Products", type: :request do
       expect(body.at_css("h1")).to be_nil
       form = body.at_css("form[method='get'][data-turbo-frame='products']")
       expect(form.at_css("input[name='name']")).not_to be_nil
-      expect(form.parent.css("> a").map { |a| a.text.strip }).to include("Crear producto")
+      actions = form.parent.at_css("> div")
+      expect(actions.element_children.map { |el| el.text.strip }).to eq(["Crear producto", "Cargar productos"])
+      import_form = actions.element_children.last
+      expect(import_form["action"]).to eq(import_products_path)
+      expect(import_form.at_css("label input[type=file][name=file]")["accept"]).to include(".csv")
       expect(clear_filters_link["href"]).to eq(products_path)
       expect(clear_filters_link["data-turbo-frame"]).to eq("_top")
       expect(body.at_css("turbo-frame#products[data-turbo-action='advance']")).not_to be_nil
@@ -200,6 +204,37 @@ RSpec.describe "Products", type: :request do
       expect(response).to redirect_to(products_path)
       expect(flash[:alert]).to be_present
       expect(Product.exists?(product.id)).to be(true)
+    end
+  end
+
+  describe "POST /products/import" do
+    def upload(content)
+      Rack::Test::UploadedFile.new(StringIO.new(content), "text/csv", original_filename: "productos.csv")
+    end
+
+    it "creates new products, updates existing prices, and lists the failed rows" do
+      create(:product, name: "Queso", price: 1000)
+
+      post import_products_path, params: { file: upload("name,price\nArequipe,8500\nqueso,1200\nSuero,\n") }
+
+      expect(response).to redirect_to(products_path)
+      expect(Product.find_by!(name: "Queso").price).to eq(BigDecimal("1200"))
+      expect(Product.find_by!(name: "Arequipe").price).to eq(BigDecimal("8500"))
+      expect(flash[:notice]).to eq("Productos creados: 1. Productos actualizados: 1.")
+      expect(flash[:alert]).to eq(["Fila 4: falta price"])
+    end
+
+    it "shows only a notice when every row is valid" do
+      post import_products_path, params: { file: upload("name,price\nArequipe,8500\n") }
+
+      expect(flash[:notice]).to eq("Productos creados: 1. Productos actualizados: 0.")
+      expect(flash[:alert]).to be_nil
+    end
+
+    it "rejects a file without the price column" do
+      post import_products_path, params: { file: upload("name\nQueso\n") }
+
+      expect(flash[:alert]).to eq("Al archivo le faltan las columnas: price.")
     end
   end
 end

@@ -13,7 +13,10 @@
       <%= render "shared/clear_filters", path: products_path %>
     <% end %>
 
-    <%= link_to t(".new_button"), new_product_path, class: create_button_class %>
+    <div class="flex flex-wrap gap-3">
+      <%= link_to t(".new_button"), new_product_path, class: create_button_class %>
+      <%= render "shared/import_button", path: import_products_path, label: t(".import_button") %>
+    </div>
   </div>
 
   <%= turbo_frame_tag "products", class: "flex flex-col gap-6", data: { turbo_action: "advance" } do %>

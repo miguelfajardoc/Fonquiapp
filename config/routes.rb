@@ -12,11 +12,15 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   resources :zones, except: [:show]
-  resources :clients
+  resources :clients do
+    collection { post :import }
+  end
   resources :routes, except: [:show] do
     collection { get :client_options }
   end
-  resources :products, except: [:show]
+  resources :products, except: [:show] do
+    collection { post :import }
+  end
   resources :default_product_quantities, except: [:show]
   resources :pending_products, except: [:show] do
     member { patch :toggle_state }

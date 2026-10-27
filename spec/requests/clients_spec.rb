@@ -51,7 +51,14 @@ RSpec.describe "Clients", type: :request do
       expect(body.at_css("main h1, h1")).to be_nil
       form = body.at_css("form[data-turbo-frame='clients']")
       row = form.parent
-      expect(row.css("> a").map { |a| a.text.strip }).to include("Crear cliente")
+      actions = row.at_css("> div")
+      expect(actions.element_children.map { |el| el.text.strip }).to eq(["Crear cliente", "Cargar clientes"])
+      import_form = actions.element_children.last
+      expect(import_form["action"]).to eq(import_clients_path)
+      expect(import_form["enctype"]).to eq("multipart/form-data")
+      file_input = import_form.at_css("label input[type=file][name=file]")
+      expect(file_input["accept"]).to include(".csv")
+      expect(file_input["data-action"]).to eq("change->auto-submit#submit")
       clear = form.css("a").find { |a| a.text.strip == "Limpiar filtros" }
       expect(clear["href"]).to eq(clients_path)
       expect(clear["data-turbo-frame"]).to eq("_top")
@@ -345,6 +352,17 @@ RSpec.describe "Clients", type: :request do
       expect(response).to redirect_to(clients_path)
     end
 
+    it "re-renders the form with an error for a name already used by another client" do
+      create(:client, name: "Tienda San José")
+
+      expect do
+        post clients_path, params: { client: { name: "TIENDA SAN JOSE", zone_id: create(:zone).id } }
+      end.not_to change(Client, :count)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Name has already been taken")
+    end
+
     it "stores the pin's coordinates and derives the url from them" do
       zone = create(:zone)
 
@@ -403,6 +421,17 @@ RSpec.describe "Clients", type: :request do
 
       expect(response).to redirect_to(clients_path)
       expect(client.reload.name).to eq("Acme Corp")
+    end
+
+    it "re-renders the form with an error when renaming to a name already in use" do
+      create(:client, name: "Tienda Norte")
+      client = create(:client, name: "Tienda Sur")
+
+      patch client_path(client), params: { client: { name: "tienda norte" } }
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(response.body).to include("Name has already been taken")
+      expect(client.reload.name).to eq("Tienda Sur")
     end
 
     it "updates the pin and re-derives the url" do
@@ -466,6 +495,60 @@ RSpec.describe "Clients", type: :request do
       expect(response).to redirect_to(clients_path)
       expect(flash[:alert]).to be_present
       expect(Client.exists?(client.id)).to be(true)
+    end
+  end
+
+  describe "POST /clients/import" do
+    def upload(content)
+      Rack::Test::UploadedFile.new(StringIO.new(content), "text/csv", original_filename: "clientes.csv")
+    end
+
+    def flash_items
+      response.parsed_body.css("main li").map { |li| li.text.strip }
+    end
+
+    it "creates the valid clients and lists the failed rows as separate items" do
+      csv = "name,address,url,phone,zone,route\n" \
+            "Tienda A,Calle 1,,,Bosa,Ruta 1\n,Calle 2,,,Bosa,\nTienda C,Calle 3,,,Bosa,\n,Calle 4,,,Bosa,\n"
+
+      post import_clients_path, params: { file: upload(csv) }
+
+      expect(response).to redirect_to(clients_path)
+      expect(Client.pluck(:name)).to contain_exactly("Tienda A", "Tienda C")
+      expect(flash[:notice]).to eq("Clientes creados: 2.")
+      expect(flash[:alert]).to eq(["Fila 3: falta name", "Fila 5: falta name"])
+      follow_redirect!
+      expect(flash_items).to include("Fila 3: falta name", "Fila 5: falta name")
+    end
+
+    it "shows only a notice when every row is valid" do
+      post import_clients_path, params: { file: upload("name,address,zone\nTienda A,Calle 1,Bosa\n") }
+
+      expect(flash[:notice]).to eq("Clientes creados: 1.")
+      expect(flash[:alert]).to be_nil
+    end
+
+    it "lists at most 20 failed rows and says how many more failed" do
+      csv = "name,address,zone\n#{",Calle,Bosa\n" * 25}"
+
+      post import_clients_path, params: { file: upload(csv) }
+
+      expect(flash[:alert].size).to eq(21)
+      expect(flash[:alert].last).to eq("Y 5 filas más con errores.")
+    end
+
+    it "rejects a file without a required column with a single alert" do
+      post import_clients_path, params: { file: upload("name,address\nTienda A,Calle 1\n") }
+
+      expect(response).to redirect_to(clients_path)
+      expect(flash[:alert]).to eq("Al archivo le faltan las columnas: zone.")
+      expect(Client.count).to eq(0)
+    end
+
+    it "asks for a file when none is sent" do
+      post import_clients_path
+
+      expect(flash[:alert]).to eq("Selecciona un archivo CSV para cargar.")
     end
   end
 end

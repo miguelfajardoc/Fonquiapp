@@ -1,6 +1,14 @@
 <% flash.each do |type, message| %>
   <% next if message.blank? %>
   <div class="rounded border px-4 py-3 text-sm <%= type.to_s == 'alert' ? 'border-accent text-text bg-surface-2 font-semibold' : 'border-border text-text bg-surface-2' %>">
-    <%= message %>
+    <% if message.is_a?(Array) %>
+      <ul class="flex flex-col gap-1">
+        <% message.each do |line| %>
+          <li><%= line %></li>
+        <% end %>
+      </ul>
+    <% else %>
+      <%= message %>
+    <% end %>
   </div>
 <% end %>

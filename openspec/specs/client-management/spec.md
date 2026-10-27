@@ -98,8 +98,9 @@ The system SHALL let a user submit a name, optional address and phone, an
 optional map location (placed with the location picker), and a required
 zone to create a new client. The form SHALL NOT offer a url field; the url
 is derived from the location. The system SHALL keep the user on the creation
-form with the invalid input and an error when the name or zone is missing,
-and SHALL let the user cancel back to the client index without creating a
+form with the invalid input and an error when the name or zone is missing
+or the name is already used by another client (ignoring letter case and
+accents), and SHALL let the user cancel back to the client index without creating a
 client.
 
 #### Scenario: Creating a client with a name and a zone
@@ -130,6 +131,15 @@ client.
 - **THEN** no client is created
 - **AND** the creation form is shown again with a validation error
 
+#### Scenario: Creating a client with a name already in use
+
+- **GIVEN** a client named "Tienda San José" exists
+- **WHEN** the new-client form is submitted with the name "TIENDA SAN JOSE"
+  and a zone selected
+- **THEN** no client is created
+- **AND** the creation form is shown again with an error saying the name is
+  already in use
+
 #### Scenario: Canceling client creation
 
 - **WHEN** cancel is chosen on the new-client form
@@ -142,7 +152,9 @@ The system SHALL let a user update a client's name, address, phone, map
 location, and zone. The form SHALL NOT offer a url field; the url is
 re-derived from the location on every save. The system SHALL keep the user
 on the edit form with the invalid input and an error when the name or zone
-is cleared, and SHALL let the user cancel back without changing the client.
+is cleared or the name is changed to one already used by another client
+(ignoring letter case and accents), and SHALL let the user cancel back
+without changing the client.
 
 #### Scenario: Updating a client with valid data
 
@@ -166,6 +178,15 @@ is cleared, and SHALL let the user cancel back without changing the client.
   no zone selected
 - **THEN** the client is not changed
 - **AND** the edit form is shown again with a validation error
+
+#### Scenario: Renaming a client to a name already in use
+
+- **GIVEN** clients named "Tienda Norte" and "Tienda Sur" exist
+- **WHEN** the edit form of "Tienda Sur" is submitted with the name
+  "tienda norte"
+- **THEN** the client is not changed
+- **AND** the edit form is shown again with an error saying the name is
+  already in use
 
 #### Scenario: Canceling client editing
 
