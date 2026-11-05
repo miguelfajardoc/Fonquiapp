@@ -1,16 +1,16 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3", ">= 8.1.3.1"
+gem "rails", "~> 8.1.4"
 # Pin below 3.0: json 3.x's parse(source, **kwargs) is incompatible with how
 # activesupport 8.1.3.1 still calls JSON.parse(json, options) positionally,
 # which breaks ActiveSupport::JSON.decode (session/flash cookie decryption
 # included) with "wrong number of arguments (given 2, expected 1)".
-gem "json", "< 3"
+gem "json", "< 4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use PostgreSQL as the database for Active Record
-gem "pg", "~> 1.5"
+gem "pg", "~> 1.7"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
 # Use JavaScript with ESM import maps [https://github.com/rails/importmap-rails]
@@ -53,7 +53,7 @@ gem "kamal", require: false
 gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
-gem "image_processing", "~> 1.2"
+gem "image_processing", "~> 2.2"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -91,4 +91,4 @@ group :test do
   gem "selenium-webdriver"
 end
 
-gem "pagy", "~> 43.6"
+gem "pagy", "~> 43.8"

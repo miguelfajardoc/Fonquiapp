@@ -104,11 +104,14 @@ jobs:
       - name: Prepare database
         run: bin/rails db:test:prepare
 
+      - name: Build Tailwind CSS
+        run: bin/rails tailwindcss:build
+
       - name: Run tests
         run: bundle exec rspec
 
       - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: screenshots

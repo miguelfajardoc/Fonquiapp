@@ -1,0 +1,51 @@
+{
+  "ignored_warnings": [
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "921b75cafec9b3b4b24d7aa5c522cf19e7931198f414bbfb9a877d164e72829d",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/models/concerns/filterable.rb",
+      "line": 17,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "where(\"unaccent(#{column_sql}) ILIKE unaccent(?)\", \"%#{sanitize_sql_like(text)}%\")",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Filterable",
+        "method": "where_unaccent_contains"
+      },
+      "user_input": "column_sql",
+      "confidence": "Medium",
+      "cwe_id": [
+        89
+      ],
+      "note": ""
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "e44e6a0ad8efdcfa0a6ef7bd6d20697325953def7c6c3e48e3c5675cb8cc2d35",
+      "check_name": "SQL",
+      "message": "Possible SQL injection",
+      "file": "app/services/csv_import.rb",
+      "line": 92,
+      "link": "https://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "scope.where(\"lower(unaccent(#{column})) = lower(unaccent(?))\", name)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "CsvImport",
+        "method": "named"
+      },
+      "user_input": "column",
+      "confidence": "Weak",
+      "cwe_id": [
+        89
+      ],
+      "note": ""
+    }
+  ],
+  "brakeman_version": "8.1.0"
+}
