@@ -76,6 +76,8 @@ group :development, :test do
 
   # Fake data generator [https://github.com/faker-ruby/faker]
   gem "faker"
+
+  gem "rexml"
 end
 
 group :development do
