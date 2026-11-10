@@ -103,15 +103,27 @@ RSpec.describe "Clients", type: :request do
       expect(listed_names).to eq(["Propio"])
     end
 
-    it "offers only the selected zone's routes, and none without a zone" do
+    it "offers only the selected zone's routes, and every route without a zone" do
       create(:route, zone: zone, name: "Ruta Propia")
       create(:route, name: "Ruta Ajena")
 
       get clients_path
-      expect(route_options).to eq(["Todas las rutas"])
+      expect(route_options).to contain_exactly("Todas las rutas", "Ruta Propia", "Ruta Ajena")
 
       get clients_path(zone_id: zone.id)
       expect(route_options).to eq(["Todas las rutas", "Ruta Propia"])
+    end
+
+    it "filters by a route with no zone selected, leaving the zone select on all zones" do
+      other_zone_route = create(:route)
+      stop = create(:client, zone: other_zone_route.zone, name: "Parada")
+      create(:client, zone: other_zone_route.zone, name: "Sin Ruta")
+      create(:route_stop, route: other_zone_route, client: stop)
+
+      get clients_path(route_id: other_zone_route.id)
+
+      expect(listed_names).to eq(["Parada"])
+      expect(response.parsed_body.at_css("select[name='zone_id'] option[selected]")).to be_nil
     end
 
     it "pre-fills the filter controls from the params" do

@@ -65,3 +65,32 @@
 .hw-combobox {
   --hw-combobox-width: 28rem;
 }
+
+/*
+ * A combobox in an index filter bar matches the selects next to it: its input
+ * already carries the filter control styling (height, border, focus ring), so
+ * the gem's padded, bordered wrapper is flattened and the width narrowed.
+ */
+.filter-combobox .hw-combobox {
+  --hw-combobox-width: 14rem;
+}
+
+.filter-combobox .hw-combobox__main__wrapper {
+  background-color: transparent;
+  border: 0;
+  padding: 0;
+
+  &:focus-within {
+    box-shadow: none;
+  }
+}
+
+/* The gem strips the input's border and focus shadow; restore the filter control look. */
+.filter-combobox .hw-combobox__input {
+  border: 1px solid var(--color-border);
+
+  &:focus,
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-accent);
+  }
+}

@@ -68,7 +68,7 @@ RSpec.describe "DefaultProductQuantities", type: :request do
       expect(clear_filters_link["data-turbo-frame"]).to eq("_top")
     end
 
-    it "offers only the selected zone's routes, and none without a zone" do
+    it "offers only the selected zone's routes, and every route without a zone" do
       route
       create(:route, zone: zone, name: "Ruta 2")
       create(:route, zone: other_zone, name: "Ruta 3")
@@ -78,7 +78,19 @@ RSpec.describe "DefaultProductQuantities", type: :request do
       expect(options).to eq(["Todas las rutas", "Ruta 1", "Ruta 2"])
 
       get default_product_quantities_path
-      expect(response.parsed_body.css("select[name='route_id'] option").size).to eq(1)
+      options = response.parsed_body.css("select[name='route_id'] option").map { |o| o.text.strip }
+      expect(options).to contain_exactly("Todas las rutas", "Ruta 1", "Ruta 2", "Ruta 3")
+    end
+
+    it "filters by a route with no zone selected, leaving the zone select on all zones" do
+      other_route = create(:route, zone: other_zone, name: "Ruta 3")
+      create(:default_product_quantity, route: route)
+      create(:default_product_quantity, route: other_route)
+
+      get default_product_quantities_path(route_id: other_route.id)
+
+      expect(frame_column("default_product_quantities", 1)).to eq(["Ruta 3"])
+      expect(response.parsed_body.at_css("select[name='zone_id'] option[selected]")).to be_nil
     end
 
     it "filters by zone and by route, ignoring a route outside the zone" do

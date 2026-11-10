@@ -93,4 +93,42 @@ RSpec.describe Route, type: :model do
       expect(DefaultProductQuantity.where(route: route).count).to eq(2)
     end
   end
+
+  describe ".filter_by" do
+    let(:bosa) { create(:zone, name: "Bosa") }
+    let(:soacha) { create(:zone, name: "Soacha") }
+    let(:client) { create(:client, zone: bosa) }
+    let!(:ruta1) { create(:route, zone: bosa, name: "Ruta 1") }
+    let!(:ruta2) { create(:route, zone: bosa, name: "Ruta 2") }
+    let!(:ruta3) { create(:route, zone: soacha, name: "Ruta 3") }
+
+    it "filters by zone" do
+      expect(described_class.filter_by(zone_id: bosa.id)).to contain_exactly(ruta1, ruta2)
+    end
+
+    it "filters by route" do
+      expect(described_class.filter_by(route_id: ruta3.id)).to eq([ruta3])
+    end
+
+    it "filters by a client who is a stop, listing each route once" do
+      create(:route_stop, route: ruta1, client: client)
+      create(:route_stop, route: ruta2, client: client)
+      create(:route_stop, route: ruta2, client: create(:client, zone: bosa))
+
+      expect(described_class.filter_by(client_id: client.id).to_a).to contain_exactly(ruta1, ruta2)
+      expect(described_class.filter_by(client_id: client.id).count).to eq(2)
+    end
+
+    it "combines zone and client" do
+      other_zone_client = create(:client, zone: soacha)
+      create(:route_stop, route: ruta3, client: other_zone_client)
+
+      expect(described_class.filter_by(zone_id: bosa.id, client_id: other_zone_client.id)).to be_empty
+    end
+
+    it "does not restrict the list for blank values" do
+      expect(described_class.filter_by(zone_id: "", route_id: nil, client_id: ""))
+        .to contain_exactly(ruta1, ruta2, ruta3)
+    end
+  end
 end

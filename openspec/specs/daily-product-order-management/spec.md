@@ -272,9 +272,10 @@ shown when all batches fit on a single page.
 The index page SHALL offer table filters, presented separately from the
 generation controls (below them and visually distinguished), consisting of
 a zone select listing every zone and a route select. The route select SHALL
-offer only the routes of the zone selected in the table filters, SHALL offer
-no routes while no zone is selected, and SHALL be cleared when that zone
-changes. The zone filter SHALL list only batches of routes in the selected
+offer every route while no zone is selected in the table filters and only
+the routes of that zone otherwise, each shown by its name only, and SHALL be
+cleared when that zone changes. Choosing a route SHALL NOT change the table
+zone select. The zone filter SHALL list only batches of routes in the selected
 zone, and the route filter only batches of the selected route. A route that
 does not belong to the selected zone SHALL be ignored. The table filters
 SHALL be independent of the generation controls: changing one SHALL NOT
@@ -306,7 +307,22 @@ emptied. When no batch matches, the list SHALL show a message saying so.
 - **WHEN** zone "Bosa" is selected in the table filters
 - **THEN** the table route select offers "Ruta 1" and "Ruta 2" only
 - **WHEN** no zone is selected in the table filters
-- **THEN** the table route select offers no routes
+- **THEN** the table route select offers "Ruta 1", "Ruta 2" and "Ruta 3"
+
+#### Scenario: Table route filter without a zone
+
+- **GIVEN** batches exist for "Ruta 1" of zone "Bosa" and "Ruta 3" of zone
+  "Soacha"
+- **WHEN** the batch table is filtered by route "Ruta 3" with no zone
+  selected
+- **THEN** only the "Ruta 3" batches are listed
+- **AND** the table zone select still shows all zones
+
+#### Scenario: Generation route choices still wait for a zone
+
+- **WHEN** the index is viewed with no zone selected in the generation
+  controls
+- **THEN** the generation route select offers no routes
 
 #### Scenario: Table filters and generation controls are independent
 

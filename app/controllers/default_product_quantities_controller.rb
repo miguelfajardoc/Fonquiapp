@@ -1,4 +1,6 @@
 class DefaultProductQuantitiesController < ApplicationController
+  include RouteFilterOptions
+
   before_action :set_default_product_quantity, only: %i[edit update destroy]
 
   def index
@@ -61,10 +63,10 @@ class DefaultProductQuantitiesController < ApplicationController
     params.expect(default_product_quantity: %i[route_id product_id quantity])
   end
 
-  # A route only applies within the selected zone, so a stale route from another zone is ignored.
+  # A route only applies within the selected zone (if any), so a stale route from another zone is ignored.
   def load_filters
     @filter_zone_id = params[:zone_id].presence
-    @filter_routes = @filter_zone_id ? Route.where(zone_id: @filter_zone_id).order(:name) : Route.none
+    @filter_routes = route_filter_options(@filter_zone_id)
     @filter_route_id = params[:route_id].presence if @filter_routes.exists?(id: params[:route_id])
     @filters = { zone_id: @filter_zone_id, route_id: @filter_route_id }
   end

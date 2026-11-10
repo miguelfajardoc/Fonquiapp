@@ -272,9 +272,10 @@ blank filter SHALL NOT restrict the list.
   ignoring letter case and accents (diacritics). Characters typed into the
   name box SHALL be matched literally, never treated as wildcards or patterns.
 - The zone filter SHALL match clients belonging to the selected zone.
-- The route select SHALL offer only the routes of the currently selected
-  zone, and SHALL offer no routes while no zone is selected. Changing the
-  selected zone SHALL refresh the route choices and clear any chosen route.
+- The route select SHALL offer every route while no zone is selected, and
+  only the routes of the currently selected zone otherwise, each shown by its
+  name only. Changing the selected zone SHALL refresh the route choices and
+  clear any chosen route. Choosing a route SHALL NOT change the zone select.
   The route filter SHALL match clients that are stops of the selected route.
 
 Filters SHALL apply without a separate submit action: after the user stops
@@ -320,7 +321,7 @@ of the unfiltered list with all filter controls emptied.
 - **GIVEN** zone "Bosa" has routes "Ruta 1" and "Ruta 2" and zone "Soacha" has
   route "Ruta 3"
 - **WHEN** the client index is viewed with no zone selected
-- **THEN** the route select offers no routes
+- **THEN** the route select offers "Ruta 1", "Ruta 2" and "Ruta 3"
 - **WHEN** zone "Bosa" is selected
 - **THEN** the route select offers "Ruta 1" and "Ruta 2" only
 - **WHEN** the selection is changed to zone "Soacha"
@@ -333,6 +334,16 @@ of the unfiltered list with all filter controls emptied.
 - **WHEN** the client index is filtered by zone "Bosa" and route "Ruta 1"
 - **THEN** client A is listed
 - **AND** client B is not listed
+
+#### Scenario: Route filter without a zone
+
+- **GIVEN** client A is a stop of "Ruta 3" of zone "Soacha" and client B is
+  not
+- **WHEN** the client index is filtered by route "Ruta 3" with no zone
+  selected
+- **THEN** client A is listed
+- **AND** client B is not listed
+- **AND** the zone select still shows all zones
 
 #### Scenario: A client on several routes appears once
 

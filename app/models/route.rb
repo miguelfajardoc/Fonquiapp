@@ -1,4 +1,6 @@
 class Route < ApplicationRecord
+  include Filterable
+
   belongs_to :zone
 
   # Declared before route_stops and default_product_quantities so a referenced route aborts before they are destroyed.
@@ -11,4 +13,9 @@ class Route < ApplicationRecord
                                               reject_if: proc { |attrs| attrs["client_id"].blank? }
 
   validates :name, presence: true, uniqueness: { scope: :zone_id }
+
+  scope :filter_by_zone_id, ->(zone_id) { where(zone_id: zone_id) }
+  scope :filter_by_route_id, ->(route_id) { where(id: route_id) }
+  # A subquery rather than a join, so a route is listed once however its stops match.
+  scope :filter_by_client_id, ->(client_id) { where(id: RouteStop.where(client_id: client_id).select(:route_id)) }
 end

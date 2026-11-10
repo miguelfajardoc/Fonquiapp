@@ -159,6 +159,8 @@ es:
       table_actions: "Acciones"
       edit: "Editar"
       delete: "Eliminar"
+      filter_client_label: "Cliente"
+      no_results: "No hay rutas que coincidan con los filtros."
     new:
       title: "Nueva ruta"
     edit:

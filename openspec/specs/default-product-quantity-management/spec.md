@@ -233,9 +233,10 @@ creation page) without a full page reload.
 ### Requirement: Default product quantity zone and route filters
 
 The index SHALL offer two optional, combinable filters: a zone select
-listing every zone and a route select. The route select SHALL offer only
-the routes of the selected zone, SHALL offer no routes while no zone is
-selected, and SHALL be cleared when the zone changes. The zone filter SHALL
+listing every zone and a route select. The route select SHALL offer every
+route while no zone is selected and only the routes of the selected zone
+otherwise, each shown by its name only, and SHALL be cleared when the zone
+changes. Choosing a route SHALL NOT change the zone select. The zone filter SHALL
 match records whose route belongs to the selected zone, and the route
 filter SHALL match records of the selected route; a route that does not
 belong to the selected zone SHALL be ignored. A blank filter SHALL NOT
@@ -267,7 +268,15 @@ show a message saying so.
 - **WHEN** zone "Bosa" is selected in the filters
 - **THEN** the route select offers "Ruta 1" and "Ruta 2" only
 - **WHEN** no zone is selected
-- **THEN** the route select offers no routes
+- **THEN** the route select offers "Ruta 1", "Ruta 2" and "Ruta 3"
+
+#### Scenario: Route filter without a zone
+
+- **GIVEN** default quantities exist for "Ruta 1" of zone "Bosa" and "Ruta
+  3" of zone "Soacha"
+- **WHEN** the index is filtered by route "Ruta 3" with no zone selected
+- **THEN** only the "Ruta 3" records are listed
+- **AND** the zone select still shows all zones
 
 #### Scenario: No record matches
 
