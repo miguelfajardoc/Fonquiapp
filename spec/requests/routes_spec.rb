@@ -27,7 +27,7 @@ RSpec.describe "Routes", type: :request do
 
       get routes_path
 
-      expect(response.body.scan("<dialog").count).to eq(1)
+      expect(response.parsed_body.css("dialog[data-modal-target='dialog']").size).to eq(1)
       expect(response.body).to include("¿Estás seguro")
     end
 
@@ -41,6 +41,162 @@ RSpec.describe "Routes", type: :request do
 
       cell = response.parsed_body.at_css("td.truncate")
       expect(cell["title"]).to eq(clients.map(&:name).join(", "))
+    end
+  end
+
+  describe "GET /routes with filters and pagination" do
+    let(:bosa) { create(:zone, name: "Bosa") }
+    let(:soacha) { create(:zone, name: "Soacha") }
+    let(:client) { create(:client, zone: bosa, name: "Tienda Norte") }
+
+    def listed_routes
+      response.parsed_body.css("turbo-frame#routes tbody tr").filter_map do |row|
+        next if row.at_css("td[colspan]")
+
+        cells = row.css("td").map { |td| td.text.strip }
+        "#{cells[0]} / #{cells[1]}"
+      end
+    end
+
+    def route_options
+      response.parsed_body.css("turbo-frame#route_route_filter option").map { |o| o.text.strip }
+    end
+
+    it "renders the zone, route and client filters, a clear link and the create button" do
+      get routes_path
+
+      form = response.parsed_body.at_css("form[action='#{routes_path}'][method='get']")
+      expect(form["data-turbo-frame"]).to eq("routes")
+      expect(form.at_css("select[name='zone_id']")).not_to be_nil
+      expect(form.at_css("turbo-frame#route_route_filter select[name='route_id']")).not_to be_nil
+      expect(form.at_css("input[type='hidden'][name='client_id']")).not_to be_nil
+      expect(form.at_css("[data-hw-combobox-async-src-value*='#{client_options_pending_products_path}']")).not_to be_nil
+      expect(form.at_css("a[href='#{routes_path}'][data-turbo-frame='_top']").text.strip).to eq("Limpiar filtros")
+      expect(response.parsed_body.at_css("turbo-frame#routes[data-turbo-action='advance']")).not_to be_nil
+      expect(response.parsed_body.css("a[href='#{new_route_path}']").map { |a| a.text.strip }).to include("Crear ruta")
+    end
+
+    it "orders routes by zone name, then route name" do
+      create(:route, zone: soacha, name: "Ruta 1")
+      create(:route, zone: bosa, name: "Ruta 2")
+      create(:route, zone: bosa, name: "Ruta 1")
+
+      get routes_path
+
+      expect(listed_routes).to eq(["Bosa / Ruta 1", "Bosa / Ruta 2", "Soacha / Ruta 1"])
+    end
+
+    it "offers every route without a zone, and only the zone's routes with one" do
+      create(:route, zone: bosa, name: "Ruta 1")
+      create(:route, zone: bosa, name: "Ruta 2")
+      create(:route, zone: soacha, name: "Ruta 3")
+
+      get routes_path
+      expect(route_options).to eq(["Todas las rutas", "Ruta 1", "Ruta 2", "Ruta 3"])
+
+      get routes_path(zone_id: bosa.id)
+      expect(route_options).to eq(["Todas las rutas", "Ruta 1", "Ruta 2"])
+    end
+
+    it "filters by zone, by route with or without a zone, and ignores a route outside the zone" do
+      ruta1 = create(:route, zone: bosa, name: "Ruta 1")
+      create(:route, zone: bosa, name: "Ruta 2")
+      ruta3 = create(:route, zone: soacha, name: "Ruta 3")
+
+      get routes_path(zone_id: bosa.id)
+      expect(listed_routes).to eq(["Bosa / Ruta 1", "Bosa / Ruta 2"])
+
+      get routes_path(zone_id: bosa.id, route_id: ruta1.id)
+      expect(listed_routes).to eq(["Bosa / Ruta 1"])
+
+      get routes_path(route_id: ruta3.id)
+      expect(listed_routes).to eq(["Soacha / Ruta 3"])
+      expect(response.parsed_body.at_css("select[name='zone_id'] option[selected]")).to be_nil
+      expect(response.parsed_body.at_css("select[name='route_id'] option[selected]")["value"]).to eq(ruta3.id.to_s)
+
+      get routes_path(zone_id: bosa.id, route_id: ruta3.id)
+      expect(listed_routes).to eq(["Bosa / Ruta 1", "Bosa / Ruta 2"])
+    end
+
+    it "filters by client, listing each matching route once with all of its clients" do
+      ruta1 = create(:route, zone: bosa, name: "Ruta 1")
+      ruta2 = create(:route, zone: bosa, name: "Ruta 2")
+      ruta3 = create(:route, zone: bosa, name: "Ruta 3")
+      other = create(:client, zone: bosa, name: "Tienda Sur")
+      create(:route_stop, route: ruta1, client: client)
+      create(:route_stop, route: ruta2, client: other)
+      create(:route_stop, route: ruta2, client: client)
+      create(:route_stop, route: ruta3, client: other)
+
+      get routes_path(client_id: client.id)
+
+      expect(listed_routes).to eq(["Bosa / Ruta 1", "Bosa / Ruta 2"])
+      clients_cell = response.parsed_body.css("turbo-frame#routes tbody tr")[1].css("td")[2].text.strip
+      expect(clients_cell).to eq("Tienda Sur, Tienda Norte")
+    end
+
+    it "combines zone and client filters" do
+      soacha_route = create(:route, zone: soacha, name: "Ruta 3")
+      bosa_route = create(:route, zone: bosa, name: "Ruta 1")
+      create(:route_stop, route: bosa_route, client: client)
+      create(:route_stop, route: soacha_route, client: create(:client, zone: soacha, name: "Tienda Norte 2"))
+
+      get routes_path(zone_id: soacha.id, client_id: client.id)
+
+      expect(listed_routes).to be_empty
+    end
+
+    it "shows a no-results message when no route matches" do
+      create(:route, zone: bosa)
+
+      get routes_path(client_id: client.id)
+
+      expect(response.parsed_body.at_css("turbo-frame#routes tbody").text)
+        .to include("No hay rutas que coincidan con los filtros.")
+    end
+
+    it "pre-fills the filters from the params, showing the chosen client's name" do
+      route = create(:route, zone: bosa)
+      create(:route_stop, route: route, client: client)
+
+      get routes_path(zone_id: bosa.id, route_id: route.id, client_id: client.id)
+
+      body = response.parsed_body
+      expect(body.at_css("select[name='zone_id'] option[selected]")["value"]).to eq(bosa.id.to_s)
+      expect(body.at_css("input[type='hidden'][name='client_id']")["value"]).to eq(client.id.to_s)
+      expect(body.at_css("[data-hw-combobox-prefilled-display-value]")["data-hw-combobox-prefilled-display-value"])
+        .to eq("Tienda Norte")
+    end
+
+    it "matches no route and leaves the client box empty for an unknown client" do
+      create(:route, zone: bosa)
+
+      get routes_path(client_id: 0)
+
+      expect(listed_routes).to be_empty
+      expect(response.parsed_body.at_css("input[type='hidden'][name='client_id']")["value"].to_s).to eq("")
+    end
+
+    it "paginates 20 routes per page, keeping the filters on page links" do
+      25.times { |i| create(:route, zone: bosa, name: format("Ruta %02d", i + 1)) }
+      create_list(:route, 5, zone: soacha)
+
+      get routes_path(zone_id: bosa.id)
+      expect(listed_routes.size).to eq(20)
+      next_link = response.parsed_body.css("turbo-frame#routes nav a").find { |a| a["href"].to_s.include?("page=2") }
+      expect(next_link["href"]).to include("zone_id=#{bosa.id}")
+
+      get next_link["href"]
+      expect(listed_routes).to eq((21..25).map { |n| "Bosa / Ruta #{n}" })
+    end
+
+    it "shows no pagination controls when every route fits on one page" do
+      create_list(:route, 3, zone: bosa)
+
+      get routes_path
+
+      expect(listed_routes.size).to eq(3)
+      expect(response.parsed_body.at_css("turbo-frame#routes nav")).to be_nil
     end
   end
 

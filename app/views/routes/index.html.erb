@@ -1,45 +1,91 @@
 <% content_for :title, t(".title") %>
 
 <div class="flex w-full flex-col gap-6" data-controller="modal">
-  <div class="mt-4 flex justify-end">
+  <div class="mt-4 flex flex-wrap items-end justify-between gap-3">
+    <%= form_with model: @client_filter, scope: "", url: routes_path, method: :get,
+          class: "flex flex-wrap items-end gap-3",
+          data: { controller: "auto-submit client-zone-filter", turbo_frame: "routes" } do |form| %>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="zone_id"><%= t("shared.filters.zone_label") %></label>
+        <select name="zone_id" id="zone_id" data-action="change->client-zone-filter#reload change->auto-submit#submit"
+                data-auto-submit-clear-param="route_id" class="<%= filter_control_class %>">
+          <option value=""><%= t("shared.filters.all_zones") %></option>
+          <% @zones.each do |zone| %>
+            <option value="<%= zone.id %>" <%= "selected" if zone.id.to_s == @filter_zone_id %>><%= zone.name %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-sm font-medium text-text" for="route_id"><%= t("shared.filters.route_label") %></label>
+        <%= turbo_frame_tag "route_route_filter", data: { client_zone_filter_target: "frame" } do %>
+          <select name="route_id" id="route_id" data-action="change->auto-submit#submit"
+                  class="<%= filter_control_class %>">
+            <option value=""><%= t("shared.filters.all_routes") %></option>
+            <% @filter_routes.each do |route| %>
+              <option value="<%= route.id %>" <%= "selected" if route.id.to_s == @filter_route_id %>><%= route.name %></option>
+            <% end %>
+          </select>
+        <% end %>
+      </div>
+      <%# Debounced: on blur the combobox announces the selection before it empties its hidden field. %>
+      <div class="filter-combobox flex flex-col gap-1"
+           data-action="hw-combobox:selection->auto-submit#debouncedSubmit hw-combobox:removal->auto-submit#debouncedSubmit">
+        <%= form.label :client_id, t(".filter_client_label"), class: "text-sm font-medium text-text" %>
+        <%= form.combobox :client_id, client_options_pending_products_path do |c|
+          c.customize_input class: "#{filter_control_class} w-full pr-9"
+        end %>
+      </div>
+      <%= render "shared/clear_filters", path: routes_path %>
+    <% end %>
+
     <%= link_to t(".new_button"), new_route_path, class: create_button_class %>
   </div>
 
-  <div class="overflow-x-auto rounded border border-border bg-surface">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="border-b border-border text-text-muted">
-          <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_clients") %></th>
-          <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @routes.each do |route| %>
-          <% client_names = route.route_stops.map { |stop| stop.client.name }.join(", ") %>
-          <tr class="border-b border-border last:border-0">
-            <td class="px-4 py-3 text-text"><%= route.zone.name %></td>
-            <td class="px-4 py-3 text-text"><%= route.name %></td>
-            <td class="max-w-xs truncate px-4 py-3 text-text" title="<%= client_names %>"><%= client_names %></td>
-            <td class="px-4 py-3">
-              <div class="flex gap-3">
-                <%= link_to t(".edit"), edit_route_path(route),
-                      class: "rounded border border-border px-3 py-1.5 text-text" %>
-                <button type="button"
-                        class="rounded border border-border px-3 py-1.5 text-text"
-                        data-action="modal#open"
-                        data-modal-name-param="<%= route.name %>"
-                        data-modal-url-param="<%= route_path(route) %>">
-                  <%= t(".delete") %>
-                </button>
-              </div>
-            </td>
+  <%= turbo_frame_tag "routes", class: "flex flex-col gap-6", data: { turbo_action: "advance" } do %>
+    <div class="overflow-x-auto rounded border border-border bg-surface">
+      <table class="w-full text-left text-sm">
+        <thead>
+          <tr class="border-b border-border text-text-muted">
+            <th class="px-4 py-3 font-medium"><%= t(".table_zone") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_name") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_clients") %></th>
+            <th class="px-4 py-3 font-medium"><%= t(".table_actions") %></th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          <% if @routes.empty? %>
+            <tr>
+              <td class="px-4 py-3 text-text-muted" colspan="4"><%= t(".no_results") %></td>
+            </tr>
+          <% end %>
+          <% @routes.each do |route| %>
+            <% client_names = route.route_stops.map { |stop| stop.client.name }.join(", ") %>
+            <tr class="border-b border-border last:border-0">
+              <td class="px-4 py-3 text-text"><%= route.zone.name %></td>
+              <td class="px-4 py-3 text-text"><%= route.name %></td>
+              <td class="max-w-xs truncate px-4 py-3 text-text" title="<%= client_names %>"><%= client_names %></td>
+              <td class="px-4 py-3">
+                <div class="flex gap-3">
+                  <%= link_to t(".edit"), edit_route_path(route),
+                        class: "rounded border border-border px-3 py-1.5 text-text",
+                        data: { turbo_frame: "_top" } %>
+                  <button type="button"
+                          class="rounded border border-border px-3 py-1.5 text-text"
+                          data-action="modal#open"
+                          data-modal-name-param="<%= route.name %>"
+                          data-modal-url-param="<%= route_path(route) %>">
+                    <%= t(".delete") %>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination", pagy: @pagy %>
+  <% end %>
 
   <%= render "shared/confirm_dialog" %>
 </div>

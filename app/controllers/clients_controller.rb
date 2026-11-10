@@ -1,5 +1,6 @@
 class ClientsController < ApplicationController
   include CsvImporting
+  include RouteFilterOptions
 
   FILTER_KEYS = %i[name zone_id route_id].freeze
 
@@ -7,7 +8,7 @@ class ClientsController < ApplicationController
 
   def index
     @zones = Zone.order(:name)
-    @routes = params[:zone_id].present? ? Route.where(zone_id: params[:zone_id]).order(:name) : Route.none
+    @routes = route_filter_options(params[:zone_id])
     @filters = filter_params
     @pagy, @clients = pagy(:offset, Client.includes(:zone, :routes).filter_by(@filters).order(:name))
   end

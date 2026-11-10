@@ -1,4 +1,6 @@
 class DailyProductOrdersController < ApplicationController
+  include RouteFilterOptions
+
   XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet".freeze
 
   def index
@@ -42,10 +44,10 @@ class DailyProductOrdersController < ApplicationController
   end
 
   # Table filters use their own params (filter_zone_id/filter_route_id) so they never clash with the
-  # generation form's zone_id/route_id on the same URL. A route only applies within the filter zone.
+  # generation form's zone_id/route_id on the same URL. A route only applies within the filter zone, if one is set.
   def load_table_filters
     @filter_zone_id = params[:filter_zone_id].presence
-    @filter_routes = @filter_zone_id ? Route.where(zone_id: @filter_zone_id).order(:name) : Route.none
+    @filter_routes = route_filter_options(@filter_zone_id)
     @filter_route_id = params[:filter_route_id].presence if @filter_routes.exists?(id: params[:filter_route_id])
     @table_filters = { zone_id: @filter_zone_id, route_id: @filter_route_id }
   end

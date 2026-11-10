@@ -190,13 +190,27 @@ RSpec.describe "DailyProductOrders", type: :request do
       expect(body.at_css("select[name='filter_zone_id'] option[selected]")["value"]).to eq(bosa.id.to_s)
     end
 
-    it "offers no table routes until a table zone is selected" do
+    it "offers every table route while no table zone is selected, still none for generation" do
       create(:route, zone: bosa, name: "Ruta Bosa")
+      create(:route, zone: soacha, name: "Ruta Soacha")
 
       get daily_product_orders_path
 
-      expect(response.parsed_body.css("turbo-frame#batch_route_filter option").map { |o| o.text.strip })
-        .to eq(["Todas las rutas"])
+      body = response.parsed_body
+      expect(body.css("turbo-frame#batch_route_filter option").map { |o| o.text.strip })
+        .to eq(["Todas las rutas", "Ruta Bosa", "Ruta Soacha"])
+      expect(body.css("turbo-frame#route_select option").map { |o| o.text.strip }).to eq(["Selecciona una ruta"])
+    end
+
+    it "filters the table by a route with no table zone selected" do
+      ruta1 = create(:route, zone: bosa, name: "Ruta 1")
+      ruta3 = create(:route, zone: soacha, name: "Ruta 3")
+      [ruta1, ruta3].each { |route| create(:daily_product_order, route: route, zone: route.zone) }
+
+      get daily_product_orders_path(filter_route_id: ruta3.id)
+
+      expect(listed_routes).to eq(["Ruta 3"])
+      expect(response.parsed_body.at_css("select[name='filter_zone_id'] option[selected]")).to be_nil
     end
 
     it "shows a no-results message when the filters match no batch" do
