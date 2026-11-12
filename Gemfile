@@ -69,7 +69,7 @@ group :development, :test do
   gem "rubocop-rails", require: false
 
   # RSpec test framework [https://github.com/rspec/rspec-rails]
-  gem "rspec-rails", "~> 8.0"
+  gem "rspec-rails", "~> 8.1"
 
   # Fixtures replacement [https://github.com/thoughtbot/factory_bot_rails]
   gem "factory_bot_rails"
